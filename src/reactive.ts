@@ -5,7 +5,14 @@
  * https://opensource.org/licenses/MIT
  */
 
-import { ES5StaticEval, ILvalue, INode, keyedObject } from 'espression';
+import {
+  BINARY_EXP,
+  ES5StaticEval,
+  ILvalue,
+  INode,
+  keyedObject,
+  unsuportedError,
+} from 'espression';
 import { combineLatest, isObservable, Observable, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 
@@ -70,6 +77,53 @@ export class ReactiveEval extends ES5StaticEval {
     );
   }
 
+  /** Rule to evaluate `ConditionalExpression` */
+  protected ConditionalExpression(node: INode, context: keyedObject): any {
+    // can't resolve all operands together as it needs short circuit evaluation
+    const test = this._eval(node.test, context);
+
+    if (!isObservable(test))
+      return test ? this._eval(node.consequent, context) : this._eval(node.alternate, context);
+
+    return test.pipe(
+      switchMap((t: any) => {
+        const res = t ? this._eval(node.consequent, context) : this._eval(node.alternate, context);
+        return isObservable(res) ? res : of(res);
+      })
+    );
+  }
+
+  /** Rule to evaluate `LogicalExpression` */
+  protected LogicalExpression(node: INode, context: keyedObject): any {
+    // can't resolve all operands together as it needs short circuit evaluation
+
+    const test = this._eval(node.left, context);
+    if (!isObservable(test))
+      switch (node.operator) {
+        case '||':
+          return test || this._eval(node.right, context);
+        case '&&':
+          return test && this._eval(node.right, context);
+        default:
+          throw unsuportedError(BINARY_EXP, node.operator);
+      }
+    return test.pipe(
+      switchMap((t: any) => {
+        let res: any;
+        switch (node.operator) {
+          case '||':
+            res = t || this._eval(node.right, context);
+            break;
+          case '&&':
+            res = t && this._eval(node.right, context);
+            break;
+          default:
+            throw unsuportedError(BINARY_EXP, node.operator);
+        }
+        return isObservable(res) ? res : of(res);
+      })
+    );
+  }
   protected _resolve(
     context: object,
     operatorCB: (...args: any[]) => any,
