@@ -42,7 +42,7 @@ export default [
 
   {
     input: MAIN_FILE,
-    external: ['tslib', 'rxjs', 'rxjs/operators'],
+    external: ['tslib', 'espression', 'rxjs', 'rxjs/operators'],
     output: [
       {
         file: pkg.main,
@@ -60,7 +60,7 @@ export default [
 
   {
     input: MAIN_FILE,
-    external: ['rxjs', 'rxjs/operators'],
+    external: ['espression', 'rxjs', 'rxjs/operators'],
     output: {
       file: pkg.es2015,
       format: 'es',
