@@ -40,8 +40,8 @@
     "dev": "rollup -w",
     "test": "node test/test.js",
     "lint": "tslint -p . ",
-    "prerelease": "npm run lint && npm run build && npm run test",
-    "release": "standard-version && npm publish && git push --follow-tags"
+    "prerelease": "npm run lint && npm run build",
+    "release": "standard-version && git push --follow-tags && npm publish"
   },
   "keywords": [
     "expression",
