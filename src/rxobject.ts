@@ -5,7 +5,7 @@
  * https://opensource.org/licenses/MIT
  */
 
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Subscription } from 'rxjs';
 
 export const AS_OBSERVABLE = Symbol('asObservable'),
   GET_OBSERVABLE = Symbol('getObservable'),
@@ -26,20 +26,28 @@ const mutatingMethods: Array<string | number | symbol> = [
 
 // tslint:disable-next-line:naming-convention
 // tslint:disable-next-line:typedef
-export function RxObject<T extends object>(base: T): T {
+export function RxObject<T extends object>(base: T, deep = false): T {
   const propSubjects: { [P in keyof T]?: BehaviorSubject<T[P]> } = {};
+  const propSubscriptions: { [P in keyof T]?: Subscription } = {};
   const mainSubject = new BehaviorSubject<T>(base);
 
   if (typeof base !== 'object') throw new Error('Base must be an object or array');
+
+  if (deep) {
+    for (const prop in base) {
+      const node: any = base[prop];
+      if (typeof node === 'object') base[prop] = RxObject(node, true);
+    }
+  }
 
   const proxy = new Proxy<T>(base, {
     get: (target: T, prop: keyof T | symbol) => {
       const cb = target[<keyof T>prop];
       if (Array.isArray(target) && typeof cb === 'function' && mutatingMethods.indexOf(prop) >= 0) {
         // tslint:disable-next-line:only-arrow-functions
-        return function(...args: any[]): any {
+        return function(): any {
           // tslint:disable-next-line:ban-types
-          const ret = (cb as Function)(...args);
+          const ret = (cb as Function).apply(target, arguments);
           mainSubject.next(target);
           // emmit new values for all suscribed
           for (const key in propSubjects) {
@@ -69,6 +77,21 @@ export function RxObject<T extends object>(base: T): T {
 
       mainSubject.next(target);
 
+      // also emit if nested object changes
+
+      if (deep) {
+        if (propSubscriptions[prop]) {
+          propSubscriptions[prop]!.unsubscribe();
+          delete propSubscriptions[prop];
+        }
+        if (typeof value === 'object') {
+          if (!isReactive(value)) value = RxObject(value, true);
+          propSubscriptions[prop] = value[AS_OBSERVABLE]().subscribe((val: any) => {
+            if (sub) sub.next(val);
+            mainSubject.next(target);
+          });
+        }
+      }
       return true;
     },
   });

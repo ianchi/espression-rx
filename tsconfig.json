@@ -7,15 +7,17 @@
     "sourceMap": true,
 
     "strict": true,
+    "alwaysStrict": true,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noUnusedParameters": true,
+    "noUnusedLocals": true,
+    "noImplicitThis": true,
 
     "outDir": "dist",
-    "typeRoots": [
-      "node_modules/@types"
-    ],
+    "typeRoots": ["node_modules/@types"],
     "importHelpers": true,
     "noEmitHelpers": true
   },
-  "files": [
-    "src/main.ts"
-  ]
+  "files": ["src/main.ts"]
 }
