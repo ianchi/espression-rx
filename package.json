@@ -22,13 +22,13 @@
     "prettier": "^1.14.2",
     "rimraf": "^2.6.2",
     "rollup": "^0.64.1",
-    "rollup-plugin-typescript2": "^0.16.0",
+    "rollup-plugin-typescript2": "^0.21.2",
     "rxjs": "^6.2.2",
     "standard-version": "^4.4.0",
     "ts-node": "^7.0.0",
     "tslint": "^5.11.0",
-    "typedoc": "^0.11.1",
-    "typedoc-plugin-markdown": "^1.1.13",
+    "typedoc": "^0.14.2",
+    "typedoc-plugin-markdown": "^1.2.1",
     "typescript": "^2.9.2"
   },
   "scripts": {
