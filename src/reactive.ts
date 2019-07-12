@@ -25,7 +25,7 @@ import { AS_OBSERVABLE, GET_OBSERVABLE, isReactive } from './rxobject';
 export class ReactiveEval extends ES5StaticEval {
   lvalue(node: INode, context: object): ILvalue {
     const result = super.lvalue(node, context);
-    if (isObservable(result.o) || isObservable(result.m) || isObservable(result.o[result.m]))
+    if (isObservable(result.o) || isObservable(result.m))
       throw new Error('Left side expression cannot be reactive.');
 
     return result;
@@ -37,11 +37,22 @@ export class ReactiveEval extends ES5StaticEval {
     const member = node.computed ? this._eval(node.property, context) : node.property.name;
 
     if (isReactive(obj)) {
-      if (isObservable(member)) return member.pipe(switchMap(prop => obj[GET_OBSERVABLE](prop)));
+      if (isObservable(member))
+        return member.pipe(
+          switchMap(prop =>
+            obj[GET_OBSERVABLE](prop).pipe(
+              // if the asigned value is an observable, switch to it
+              switchMap(res => (isObservable(res) ? res : of(res)))
+            )
+          )
+        );
 
       if (isReactive(obj[member])) return obj && obj[member];
 
-      return obj[GET_OBSERVABLE](member);
+      return obj[GET_OBSERVABLE](member).pipe(
+        // if the asigned value is an observable, switch to it
+        switchMap(res => (isObservable(res) ? res : of(res)))
+      );
     } else if (isObservable(obj)) {
       if (isObservable<any>(member)) {
         return combineLatest([obj, member]).pipe(map(([o, m]: [keyedObject, string]) => o && o[m]));
