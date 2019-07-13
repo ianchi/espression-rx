@@ -14,7 +14,7 @@
     "tslib": "^1.10.0"
   },
   "peerDependencies": {
-    "rxjs": "^6.2.1",
+    "rxjs": "^6.5.2",
     "espression": "^1.1.1"
   },
   "devDependencies": {

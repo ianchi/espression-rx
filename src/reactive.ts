@@ -55,7 +55,7 @@ export class ReactiveEval extends ES5StaticEval {
       );
     } else if (isObservable<any>(obj)) {
       if (isObservable<any>(member)) {
-        return combineLatest<[keyedObject, string]>([obj, member]).pipe(map(([o, m]: [keyedObject, string]) => o && o[m]));
+        return combineLatest([obj, member]).pipe(map(([o, m]: [keyedObject, string]) => o && o[m]));
       } else {
         return obj.pipe(map((o: keyedObject) => o && o[member]));
       }
