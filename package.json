@@ -1,6 +1,6 @@
 {
   "name": "espression-rx",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "ESpression extension to perform reactive evaluation of expressions",
   "author": "Adrian Panella <ianchi74@outlook.com>",
   "license": "MIT",
