@@ -7,7 +7,7 @@
 
 import {
   BINARY_EXP,
-  ES5StaticEval,
+  ES6StaticEval,
   ILvalue,
   INode,
   keyedObject,
@@ -22,7 +22,7 @@ import { AS_OBSERVABLE, GET_OBSERVABLE, isReactive } from './rxobject';
  * Extends ES5 StaticEval to perform reactive evaluation of expressions having Observable values.
  * It returns an Observable which emmits a new result when any dependet member emmits a new value
  */
-export class ReactiveEval extends ES5StaticEval {
+export class ReactiveEval extends ES6StaticEval {
   lvalue(node: INode, context: object): ILvalue {
     const result = super.lvalue(node, context);
     if (isObservable(result.o) || isObservable(result.m))

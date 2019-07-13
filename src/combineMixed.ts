@@ -15,6 +15,7 @@ import { map } from 'rxjs/operators';
  * @param input Array of values or observables
  * @param asObservable If false and all the array is scalar, returns a scalar. Default: `true`
  */
+export function combineMixed(input: any[] | keyedObject, asObservable: true): Observable<any[]>;
 export function combineMixed(
   input: any[] | keyedObject,
   asObservable: boolean = true
