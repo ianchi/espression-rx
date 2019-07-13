@@ -11,32 +11,32 @@
   "types": "dist/src/main.d.ts",
   "private": false,
   "dependencies": {
-    "tslib": "^1.9.3"
+    "tslib": "^1.10.0"
   },
   "peerDependencies": {
     "rxjs": "^6.2.1",
     "espression": "^1.1.1"
   },
   "devDependencies": {
-    "espression": "^1.1.0",
-    "prettier": "^1.14.2",
-    "rimraf": "^2.6.2",
-    "rollup": "^0.64.1",
-    "rollup-plugin-typescript2": "^0.21.2",
-    "rxjs": "^6.2.2",
-    "standard-version": "^4.4.0",
-    "ts-node": "^7.0.0",
-    "tslint": "^5.11.0",
+    "espression": "^1.1.1",
+    "prettier": "^1.18.2",
+    "rimraf": "^2.6.3",
+    "rollup": "^1.16.7",
+    "rollup-plugin-typescript2": "^0.22.0",
+    "rxjs": "^6.5.2",
+    "standard-version": "^6.0.1",
+    "ts-node": "^8.3.0",
+    "tslint": "^5.18.0",
     "typedoc": "^0.14.2",
     "typedoc-plugin-markdown": "^1.2.1",
-    "typescript": "^2.9.2"
+    "typescript": "^3.5.3"
   },
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "rollup -c",
     "dev": "rollup -w",
     "test": "node test/test.js",
-    "lint": "tslint -p . ",
+    "lint": "tslint -p . && prettier -l src/*.ts",
     "prerelease": "npm run lint && npm run build",
     "release": "standard-version && git push --follow-tags && npm publish"
   },
