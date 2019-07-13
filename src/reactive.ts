@@ -53,9 +53,9 @@ export class ReactiveEval extends ES5StaticEval {
         // if the asigned value is an observable, switch to it
         switchMap(res => (isObservable(res) ? res : of(res)))
       );
-    } else if (isObservable(obj)) {
+    } else if (isObservable<any>(obj)) {
       if (isObservable<any>(member)) {
-        return combineLatest([obj, member]).pipe(map(([o, m]: [keyedObject, string]) => o && o[m]));
+        return combineLatest<[keyedObject, string]>([obj, member]).pipe(map(([o, m]: [keyedObject, string]) => o && o[m]));
       } else {
         return obj.pipe(map((o: keyedObject) => o && o[member]));
       }
@@ -69,8 +69,8 @@ export class ReactiveEval extends ES5StaticEval {
   /** Rule to evaluate `CallExpression` */
   protected CallExpression(node: INode, context: object): any {
     const funcDef:
-      | { obj: object; func: () => any; args: any[] }
-      | Observable<{ obj: object; func: () => any; args: any[] }> = this._fcall(node, context);
+      | { obj: object; func: () => any; args: [] }
+      | Observable<{ obj: object; func: () => any; args: [] }> = this._fcall(node, context);
 
     if (!isObservable(funcDef)) return funcDef.func.apply(funcDef.obj, funcDef.args);
 
@@ -159,8 +159,8 @@ export class ReactiveEval extends ES5StaticEval {
     if (!hasObs) return operatorCB(...results);
 
     return combineLatest(
-      results.map(
-        (node, i) => (isObs[i] === 1 ? node : isObs[i] === 2 ? node[AS_OBSERVABLE]() : of(node))
+      results.map((node, i) =>
+        isObs[i] === 1 ? node : isObs[i] === 2 ? node[AS_OBSERVABLE]() : of(node)
       )
     ).pipe(
       map(res => {

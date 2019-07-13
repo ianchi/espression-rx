@@ -5,10 +5,10 @@
  * https://opensource.org/licenses/MIT
  */
 
+import { keyedObject } from 'espression';
 import { combineLatest, isObservable, Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-import { keyedObject } from 'espression';
 /**
  * Same as `combineLatest`, but the input array can have mixed scalar and Observables.
  *
@@ -23,7 +23,7 @@ export function combineMixed(
     let pos = 0;
     const isObs: Array<number | false> = [],
       hasObs = input.reduce(
-        (acum, val, i) => !!(isObs[i] = isObservable(val) && pos++) || acum,
+        (acum, val, i) => (isObs[i] = isObservable(val) && pos++) !== false || acum,
         false
       ); // tslint:disable-line:no-conditional-assignment
 
