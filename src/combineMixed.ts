@@ -18,6 +18,10 @@ import { map } from 'rxjs/operators';
 export function combineMixed(input: any[] | keyedObject, asObservable: true): Observable<any[]>;
 export function combineMixed(
   input: any[] | keyedObject,
+  asObservable?: false
+): Observable<any[]> | any[] | object;
+export function combineMixed(
+  input: any[] | keyedObject,
   asObservable: boolean = true
 ): Observable<any[]> | any[] | object {
   if (Array.isArray(input)) {
