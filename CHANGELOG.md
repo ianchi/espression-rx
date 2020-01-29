@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.3.2](https://github.com/ianchi/ESpression-rx/compare/v0.3.1...v0.3.2) (2020-01-29)
+
+
+### Bug Fixes
+
+* handling of lvalues ([e3bfda5](https://github.com/ianchi/ESpression-rx/commit/e3bfda5980e88c4f7d8a170049e44a8918934d3b))
+* **RxObject:** adds deleteProperty handler ([33f6851](https://github.com/ianchi/ESpression-rx/commit/33f68513d7aa804fdcd9c4d86be9c7af8286baae))
+* try to resolve arrow function expression ([5e99f9f](https://github.com/ianchi/ESpression-rx/commit/5e99f9f02359427e3fb766cf3e961d5fb403ecf7))
+
 ### [0.3.1](https://github.com/ianchi/ESpression-rx/compare/v0.3.0...v0.3.1) (2019-07-14)
 
 
