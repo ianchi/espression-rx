@@ -88,6 +88,28 @@ export class ReactiveEval extends ES6StaticEval {
     );
   }
 
+  protected ArrowFunctionExpression(node: INode, context: keyedObject): any {
+    const es6Func = super.ArrowFunctionExpression(node, context);
+
+    return (...params: any[]) => {
+      const resultOrObservable = es6Func(...params);
+      let resolved = false;
+      let result: any;
+
+      if (isObservable(resultOrObservable)) {
+        // subscribe to see if there is synchronous result
+        resultOrObservable.pipe(take(1)).subscribe(res => {
+          resolved = true;
+          result = res;
+        });
+
+        if (resolved) return result;
+
+        console.warn('Returning unresolved observable from arrow function expression');
+        return resultOrObservable;
+      } else return resultOrObservable;
+    };
+  }
   /** Rule to evaluate `ConditionalExpression` */
   protected ConditionalExpression(node: INode, context: keyedObject): any {
     // can't resolve all operands together as it needs short circuit evaluation
