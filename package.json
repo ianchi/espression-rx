@@ -15,21 +15,21 @@
   },
   "peerDependencies": {
     "rxjs": "^6.5.2",
-    "espression": "^1.1.1"
+    "espression": "^1.4.0"
   },
   "devDependencies": {
-    "espression": "^1.2.0",
-    "prettier": "^1.18.2",
-    "rimraf": "^2.6.3",
-    "rollup": "^1.16.7",
-    "rollup-plugin-typescript2": "^0.22.0",
-    "rxjs": "^6.5.2",
-    "standard-version": "^6.0.1",
-    "ts-node": "^8.3.0",
-    "tslint": "^5.18.0",
-    "typedoc": "^0.14.2",
-    "typedoc-plugin-markdown": "^1.2.1",
-    "typescript": "^3.5.3"
+    "espression": "^1.4.0",
+    "prettier": "^1.19.1",
+    "rimraf": "^3.0.1",
+    "rollup": "^1.30.1",
+    "rollup-plugin-typescript2": "^0.25.3",
+    "rxjs": "^6.5.4",
+    "standard-version": "^7.1.0",
+    "ts-node": "^8.6.2",
+    "tslint": "^6.0.0",
+    "typedoc": "^0.16.9",
+    "typedoc-plugin-markdown": "^2.2.16",
+    "typescript": "^3.7.5"
   },
   "scripts": {
     "prebuild": "rimraf dist",
