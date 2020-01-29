@@ -11,7 +11,7 @@ export const AS_OBSERVABLE = Symbol('asObservable'),
   GET_OBSERVABLE = Symbol('getObservable'),
   IS_REACTIVE = Symbol('isReactive');
 
-/** Array mutating methods that must trigger emmit */
+/** Array mutating methods that must trigger emit */
 const mutatingMethods: Array<string | number | symbol> = [
   'copyWithin',
   'fill',
@@ -27,8 +27,8 @@ const mutatingMethods: Array<string | number | symbol> = [
 // tslint:disable-next-line:naming-convention
 // tslint:disable-next-line:typedef
 export function RxObject<T extends object>(base: T, deep = false, handler?: ProxyHandler<T>): T {
-  const propSubjects: { [P in keyof T]?: BehaviorSubject<T[P]> } = {};
-  const propSubscriptions: { [P in keyof T]?: Subscription } = {};
+  const propSubjects:  { [P in keyof T]?: BehaviorSubject<T[P]> } = {};
+  const propSubscriptions = {} as { [P in keyof T]?: Subscription } ;
   const mainSubject = new BehaviorSubject<T>(base);
 
   if (typeof base !== 'object') throw new Error('Base must be an object or array');
@@ -36,7 +36,7 @@ export function RxObject<T extends object>(base: T, deep = false, handler?: Prox
   if (deep) {
     for (const prop in base) {
       const node: any = base[prop];
-      if (typeof node === 'object') base[prop] = RxObject(node, true);
+      if (typeof node === 'object' && !isReactive(node)) base[prop] = RxObject(node, true);
     }
   }
 
@@ -59,7 +59,7 @@ export function RxObject<T extends object>(base: T, deep = false, handler?: Prox
           // tslint:disable-next-line:ban-types
           const ret = (cb as Function).apply(target, arguments);
           mainSubject.next(target);
-          // emmit new values for all suscribed
+          // emit new values for all subscribed
           for (const key in propSubjects) {
             propSubjects[key]!.next(target[key]);
           }
@@ -81,8 +81,9 @@ export function RxObject<T extends object>(base: T, deep = false, handler?: Prox
       // also emit if nested object changes
 
       if (deep) {
-        if (propSubscriptions[prop]) {
-          propSubscriptions[prop]!.unsubscribe();
+        const propSubs = propSubscriptions[prop]; 
+        if (propSubs) {
+          propSubs.unsubscribe();
           delete propSubscriptions[prop];
         }
         if (typeof value === 'object') {
@@ -95,6 +96,27 @@ export function RxObject<T extends object>(base: T, deep = false, handler?: Prox
       }
       return true;
     },
+
+    deleteProperty(target: T, prop: keyof T): boolean {
+      if (!(prop in target)) return delete target[prop];
+      const sub = propSubjects[prop];
+      const ret = delete target[prop];
+      if (sub) sub.next(target[prop]);
+
+      mainSubject.next(target);
+
+      // remove nested subscription
+
+      if (deep) {
+        const propSubs = propSubscriptions[prop];
+        if (propSubs) {
+          propSubs.unsubscribe();
+          delete propSubscriptions[prop];
+        }
+      }
+
+      return ret;
+    }
   });
 
   return proxy;
