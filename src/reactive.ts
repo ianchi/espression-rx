@@ -6,6 +6,8 @@
  */
 
 import {
+  ASSIGN_EXP,
+  assignOpCB,
   BINARY_EXP,
   ES6StaticEval,
   ILvalue,
@@ -14,23 +16,54 @@ import {
   unsuportedError,
 } from 'espression';
 import { combineLatest, isObservable, Observable, of } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { map, switchMap, take } from 'rxjs/operators';
 
 import { AS_OBSERVABLE, GET_OBSERVABLE, isReactive } from './rxobject';
 
 /**
  * Extends ES5 StaticEval to perform reactive evaluation of expressions having Observable values.
- * It returns an Observable which emmits a new result when any dependet member emmits a new value
+ * It returns an Observable which emits a new result when any dependent member emits a new value
  */
 export class ReactiveEval extends ES6StaticEval {
   lvalue(node: INode, context: object): ILvalue {
     const result = super.lvalue(node, context);
-    if (isObservable(result.o) || isObservable(result.m))
-      throw new Error('Left side expression cannot be reactive.');
+    if (isObservable(result.o)) throw new Error('Left side object cannot be an observable.');
+
+    if (isObservable(result.m)) {
+      let resolved = false;
+
+      // try to get resolved value of computed member expression
+      result.m.pipe(take(1)).subscribe((m: any) => {
+        resolved = true;
+        result.m = m;
+      });
+
+      if (!resolved)
+        throw new Error('Computed member expression in lvalue is not resolved observable');
+    }
 
     return result;
   }
 
+  /** Rule to evaluate `AssignmentExpression` */
+  protected AssignmentExpression(node: INode, context: keyedObject): any {
+    if (!(node.operator in assignOpCB)) throw unsuportedError(ASSIGN_EXP, node.operator);
+    const left = this.lvalue(node.left, context);
+
+    // if lvalue is reactive don't assign potencially an observable, but the resolved value
+    // the reactive object will emit anyway the resolved value
+    if (isReactive(left.o)) {
+      const right = this._eval(node.right, context);
+
+      if (isObservable(right))
+        return right.pipe(map(val => assignOpCB[node.operator](left.o, left.m, val)));
+      else return assignOpCB[node.operator](left.o, left.m, right);
+    }
+    // if it is a simple variable allow to assign the observable, to be used as alias
+    // otherwise until the value is resolved the lvalue won't see the assignment if used in
+    // other expression
+    return assignOpCB[node.operator](left.o, left.m, this._eval(node.right, context));
+  }
   /** Rule to evaluate `MemberExpression` */
   protected MemberExpression(node: INode, context: object): any {
     const obj = this._eval(node.object, context);
@@ -41,7 +74,7 @@ export class ReactiveEval extends ES6StaticEval {
         return member.pipe(
           switchMap(prop =>
             obj[GET_OBSERVABLE](prop).pipe(
-              // if the asigned value is an observable, switch to it
+              // if the assigned value is an observable, switch to it
               switchMap(res => (isObservable(res) ? res : of(res)))
             )
           )
@@ -50,7 +83,7 @@ export class ReactiveEval extends ES6StaticEval {
       if (isReactive(obj[member])) return obj && obj[member];
 
       return obj[GET_OBSERVABLE](member).pipe(
-        // if the asigned value is an observable, switch to it
+        // if the assigned value is an observable, switch to it
         switchMap(res => (isObservable(res) ? res : of(res)))
       );
     } else if (isObservable<any>(obj)) {
