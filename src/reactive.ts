@@ -6,8 +6,8 @@
  */
 
 import {
-  ASSIGN_EXP,
   assignOpCB,
+  ASSIGN_EXP,
   BINARY_EXP,
   ES6StaticEval,
   ILvalue,

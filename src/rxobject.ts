@@ -27,8 +27,8 @@ const mutatingMethods: Array<string | number | symbol> = [
 // tslint:disable-next-line:naming-convention
 // tslint:disable-next-line:typedef
 export function RxObject<T extends object>(base: T, deep = false, handler?: ProxyHandler<T>): T {
-  const propSubjects:  { [P in keyof T]?: BehaviorSubject<T[P]> } = {};
-  const propSubscriptions = {} as { [P in keyof T]?: Subscription } ;
+  const propSubjects: { [P in keyof T]?: BehaviorSubject<T[P]> } = {};
+  const propSubscriptions = {} as { [P in keyof T]?: Subscription };
   const mainSubject = new BehaviorSubject<T>(base);
 
   if (typeof base !== 'object') throw new Error('Base must be an object or array');
@@ -81,7 +81,7 @@ export function RxObject<T extends object>(base: T, deep = false, handler?: Prox
       // also emit if nested object changes
 
       if (deep) {
-        const propSubs = propSubscriptions[prop]; 
+        const propSubs = propSubscriptions[prop];
         if (propSubs) {
           propSubs.unsubscribe();
           delete propSubscriptions[prop];
@@ -116,7 +116,7 @@ export function RxObject<T extends object>(base: T, deep = false, handler?: Prox
       }
 
       return ret;
-    }
+    },
   });
 
   return proxy;
