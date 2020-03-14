@@ -13,6 +13,7 @@ import {
   ILvalue,
   INode,
   keyedObject,
+  MEMBER_EXP,
   unsuportedError,
 } from 'espression';
 import { combineLatest, isObservable, Observable, of } from 'rxjs';
@@ -66,7 +67,39 @@ export class ReactiveEval extends ES6StaticEval {
   }
   /** Rule to evaluate `MemberExpression` */
   protected MemberExpression(node: INode, context: object): any {
+    const member = this._member(node, context);
+
+    return isObservable(member) ? member.pipe(map((v: any) => v.value)) : member.value;
+  }
+
+  /**
+   * Returns a left side value wrapped to be used for assignment
+   */
+
+  protected _member(node: INode, context: keyedObject): any {
     const obj = this._eval(node.object, context);
+
+    if (node.optional || node.shortCircuited) {
+      if (isObservable(obj))
+        return obj.pipe(
+          switchMap((o: any) => {
+            if (o === null || typeof o === 'undefined') return of({ value: undefined });
+            const member = node.computed ? this._eval(node.property, context) : node.property.name;
+
+            return isObservable(member)
+              ? member.pipe(map((m: any) => ({ obj: o, member: m, value: o[m] })))
+              : of({ obj: o, member, value: o[member] });
+          })
+        );
+      else if (!isReactive(obj)) {
+        const member = node.computed ? this._eval(node.property, context) : node.property.name;
+        return obj === null || typeof obj === 'undefined'
+          ? { value: undefined }
+          : { obj, member, value: obj[member] };
+      }
+    }
+
+    // not short-circuited (or reactive, and thus not nullish)
     const member = node.computed ? this._eval(node.property, context) : node.property.name;
 
     if (isReactive(obj)) {
@@ -75,28 +108,37 @@ export class ReactiveEval extends ES6StaticEval {
           switchMap(prop =>
             obj[GET_OBSERVABLE](prop).pipe(
               // if the assigned value is an observable, switch to it
-              switchMap(res => (isObservable(res) ? res : of(res)))
+              switchMap(res =>
+                isObservable(res)
+                  ? res.pipe(map(value => ({ obj, member: prop, value })))
+                  : of({ obj, member: prop, value: res })
+              )
             )
           )
         );
 
-      if (isReactive(obj[member])) return obj && obj[member];
+      if (isReactive(obj[member])) return obj[member];
 
       return obj[GET_OBSERVABLE](member).pipe(
         // if the assigned value is an observable, switch to it
-        switchMap(res => (isObservable(res) ? res : of(res)))
+        switchMap(res =>
+          isObservable(res)
+            ? res.pipe(map(value => ({ obj, member, value })))
+            : of({ obj, member, value: res })
+        )
       );
     } else if (isObservable<any>(obj)) {
-      if (isObservable<any>(member)) {
-        return combineLatest([obj, member]).pipe(map(([o, m]: [keyedObject, string]) => o && o[m]));
-      } else {
-        return obj.pipe(map((o: keyedObject) => o && o[member]));
-      }
+      return isObservable<any>(member)
+        ? combineLatest([obj, member]).pipe(
+            map(([o, m]: [keyedObject, string]) => ({ obj: o, member: m, value: o[m] }))
+          )
+        : obj.pipe(map((o: keyedObject) => ({ obj: o, member, value: o[member] })));
     }
 
-    if (isObservable<any>(member)) return member.pipe(map(prop => obj && obj[prop]));
+    if (isObservable<any>(member))
+      return member.pipe(map(prop => ({ obj, member: prop, value: obj[prop] })));
 
-    return obj && obj[member];
+    return { obj, member, value: obj[member] };
   }
 
   /** Rule to evaluate `CallExpression` */
@@ -105,18 +147,14 @@ export class ReactiveEval extends ES6StaticEval {
       | { obj: object; func: () => any; args: [] }
       | Observable<{ obj: object; func: () => any; args: [] }> = this._fcall(node, context);
 
-    if (!isObservable(funcDef)) return funcDef.func.apply(funcDef.obj, funcDef.args);
+    if (!isObservable(funcDef))
+      return !funcDef ? undefined : funcDef.func.apply(funcDef.obj, funcDef.args);
 
     return funcDef.pipe(
       switchMap(def => {
-        try {
-          const result = def.func.apply(def.obj, def.args);
-
-          return isObservable(result) ? result : of(result);
-        } catch (e) {
-          console.warn('Eval error', e);
-          return of(undefined);
-        }
+        if (!def) return of(undefined);
+        const result = def.func.apply(def.obj, def.args);
+        return isObservable(result) ? result : of(result);
       })
     );
   }
@@ -170,7 +208,7 @@ export class ReactiveEval extends ES6StaticEval {
           return test || this._eval(node.right, context);
         case '&&':
           return test && this._eval(node.right, context);
-        case '??':  
+        case '??':
           return test ?? this._eval(node.right, context);
         default:
           throw unsuportedError(BINARY_EXP, node.operator);
@@ -192,7 +230,7 @@ export class ReactiveEval extends ES6StaticEval {
             throw unsuportedError(BINARY_EXP, node.operator);
         }
         return isObservable(res) ? res : of(res);
-      }) 
+      })
     );
   }
   protected _resolve(
@@ -222,16 +260,60 @@ export class ReactiveEval extends ES6StaticEval {
       results.map((node, i) =>
         isObs[i] === 1 ? node : isObs[i] === 2 ? node[AS_OBSERVABLE]() : of(node)
       )
-    ).pipe(
-      map(res => {
-        try {
-          return operatorCB(...res);
-        } catch (e) {
-          console.warn('Eval error', e);
-          return undefined;
-        }
-      })
-    );
+    ).pipe(map(res => operatorCB(...res)));
+  }
+
+  /**
+   * Returns a left side value wrapped to be used for assignment
+   */
+
+  protected _fcall(node: INode, context: keyedObject): any {
+    let obj: any, func: any, member: any;
+    // capture context in closure for use in callback
+    // Getting it from 'this' is not reliable for async evaluation as it may have changed in later evals
+
+    if (node.callee.type === MEMBER_EXP) {
+      member = this._member(node, context);
+
+      if (isObservable<any>(member))
+        return member.pipe<any>(
+          switchMap(m => {
+            if (
+              (node.optional || node.shortCircuited) &&
+              (m.value === null || typeof m.value === 'undefined')
+            )
+              return of(undefined);
+            else
+              return this._resolve(
+                context,
+                (...args) => ({ obj: m.obj, func: m.value, args }),
+                ...node.arguments
+              );
+          })
+        );
+      else {
+        obj = member.obj;
+        func = member.value;
+      }
+    } else {
+      obj = context;
+      func = this._eval(node.callee.object, context);
+
+      if (isObservable<any>(func)) {
+        func.pipe(
+          map(f =>
+            (node.optional || node.shortCircuited) && (f === null || typeof f === 'undefined')
+              ? of(undefined)
+              : this._resolve(context, (...args) => ({ obj, func: f, args }), ...node.arguments)
+          )
+        );
+      }
+    }
+
+    if ((node.optional || node.shortCircuited) && (func === null || typeof func === 'undefined'))
+      return undefined;
+
+    return this._resolve(context, (...args) => ({ obj, func, args }), ...node.arguments);
   }
 }
 export function reactiveEvalFactory(): ReactiveEval {
