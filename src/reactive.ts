@@ -170,6 +170,8 @@ export class ReactiveEval extends ES6StaticEval {
           return test || this._eval(node.right, context);
         case '&&':
           return test && this._eval(node.right, context);
+        case '??':  
+          return test ?? this._eval(node.right, context);
         default:
           throw unsuportedError(BINARY_EXP, node.operator);
       }
@@ -183,11 +185,14 @@ export class ReactiveEval extends ES6StaticEval {
           case '&&':
             res = t && this._eval(node.right, context);
             break;
+          case '??':
+            res = t ?? this._eval(node.right, context);
+            break;
           default:
             throw unsuportedError(BINARY_EXP, node.operator);
         }
         return isObservable(res) ? res : of(res);
-      })
+      }) 
     );
   }
   protected _resolve(
