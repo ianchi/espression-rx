@@ -17,7 +17,8 @@
     "outDir": "dist",
     "typeRoots": ["node_modules/@types"],
     "importHelpers": true,
-    "noEmitHelpers": true
+    "noEmitHelpers": true,
+    "downlevelIteration": true
   },
   "files": ["src/main.ts"]
 }

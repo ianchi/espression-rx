@@ -6,18 +6,21 @@
  */
 
 import {
+  ARRAY_PAT,
   assignOpCB,
-  ASSIGN_EXP,
   BINARY_EXP,
   ES6StaticEval,
   ILvalue,
   INode,
   keyedObject,
+  LITERAL_EXP,
   MEMBER_EXP,
+  OBJECT_PAT,
+  REST_ELE,
   unsuportedError,
 } from 'espression';
 import { combineLatest, isObservable, Observable, of } from 'rxjs';
-import { map, switchMap, take } from 'rxjs/operators';
+import { map, share, shareReplay, switchMap, take } from 'rxjs/operators';
 
 import { AS_OBSERVABLE, GET_OBSERVABLE, isReactive } from './rxobject';
 
@@ -46,25 +49,149 @@ export class ReactiveEval extends ES6StaticEval {
     return result;
   }
 
-  /** Rule to evaluate `AssignmentExpression` */
-  protected AssignmentExpression(node: INode, context: keyedObject): any {
-    if (!(node.operator in assignOpCB)) throw unsuportedError(ASSIGN_EXP, node.operator);
-    const left = this.lvalue(node.left, context);
+  _assignPattern(node: INode, operator: string, right: any, context: any): any {
+    const rx = isObservable(right);
 
+    switch (node.type) {
+      case ARRAY_PAT:
+        if (rx) {
+          right = right.pipe(
+            map((r: any) => {
+              if (!r || typeof r[Symbol.iterator] !== 'function')
+                throw new Error('TypeError: must be iterable');
+              return r;
+            }),
+            share()
+          );
+        } else if (!right || typeof right[Symbol.iterator] !== 'function')
+          throw new Error('TypeError: must be iterable');
+
+        for (let i = 0; i < node.elements.length; i++) {
+          let subnode: INode, func: (n: Iterable<any>, i: number) => any;
+
+          if (!node.elements[i]) continue;
+
+          if (node.elements[i].type === REST_ELE) {
+            subnode = node.elements[i].argument;
+            func = iterSlice;
+          } else {
+            subnode = node.elements[i];
+            func = iterAt;
+          }
+
+          this._assignPattern(
+            subnode,
+            operator,
+            rx ? right.pipe(map((r: Iterable<any>) => func(r, i))) : func(right, i),
+            context
+          );
+        }
+
+        break;
+
+      case OBJECT_PAT:
+        if (rx) {
+          right = right.pipe(
+            map((r: any) => {
+              if (r === null || typeof r === 'undefined')
+                throw new Error('TypeError: must be convertible to object');
+              return r;
+            }),
+            share()
+          );
+        } else if (right === null || typeof right === 'undefined')
+          throw new Error('TypeError: must be convertible to object');
+
+        const visited: any = {};
+
+        for (let i = 0; i < node.properties.length; i++) {
+          if (node.properties[i].type === REST_ELE) {
+            this._assignPattern(
+              node.properties[i].argument,
+              operator,
+              rx
+                ? right.pipe(
+                    map((r: any) =>
+                      Object.keys(r)
+                        .filter(k => !(k in visited))
+                        .reduce((rst: any, k) => ((rst[k] = r[k]), rst), {})
+                    )
+                  )
+                : Object.keys(right)
+                    .filter(k => !(k in visited))
+                    .reduce((rst: any, k) => ((rst[k] = right[k]), rst), {}),
+              context
+            );
+          } else {
+            let key: string;
+
+            if (node.properties[i].computed) {
+              const computed = this._eval(node.properties[i].key, context);
+
+              if (isObservable(computed)) {
+                let resolved = false;
+
+                // try to get resolved value of computed member expression
+                computed.pipe(take(1)).subscribe((m: any) => {
+                  resolved = true;
+                  key = m;
+                });
+
+                if (!resolved)
+                  throw new Error(
+                    'Computed member expression in lvalue is not resolved observable'
+                  );
+              } else key = computed;
+            } else
+              key =
+                node.properties[i].key.type === LITERAL_EXP
+                  ? node.properties[i].key.value
+                  : node.properties[i].key.name;
+
+            visited[key!] = true;
+            this._assignPattern(
+              node.properties[i].value,
+              operator,
+              rx ? right.pipe(map((r: any) => r[key!])) : right[key!],
+              context
+            );
+          }
+        }
+
+        break;
+
+      case 'AssignmentPattern':
+        if (typeof right === 'undefined') right = this._eval(node.right, context);
+        else if (isObservable(right))
+          right = right.pipe(
+            switchMap((r: any) => {
+              console.log('assign:', r);
+              if (typeof r === 'undefined') r = this._eval(node.right, context);
+
+              return isObservable(r) ? r : of(r);
+            })
+          );
+
+        return this._assignPattern(node.left, operator, right, context);
+
+      default:
+        const left = this.lvalue(node, context);
     // if lvalue is reactive don't assign potencially an observable, but the resolved value
     // the reactive object will emit anyway the resolved value
-    if (isReactive(left.o)) {
-      const right = this._eval(node.right, context);
-
-      if (isObservable(right))
+        if (isReactive(left.o) && rx)
         return right.pipe(map(val => assignOpCB[node.operator](left.o, left.m, val)));
-      else return assignOpCB[node.operator](left.o, left.m, right);
-    }
+
     // if it is a simple variable allow to assign the observable, to be used as alias
     // otherwise until the value is resolved the lvalue won't see the assignment if used in
     // other expression
-    return assignOpCB[node.operator](left.o, left.m, this._eval(node.right, context));
+        if (rx) right = right.pipe(shareReplay(1));
+
+        return assignOpCB[operator](left.o, left.m, right);
+    }
+
+    return right;
   }
+
   /** Rule to evaluate `MemberExpression` */
   protected MemberExpression(node: INode, context: object): any {
     const member = this._member(node, context);
