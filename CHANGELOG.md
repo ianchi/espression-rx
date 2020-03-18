@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.3.3](https://github.com/ianchi/ESpression-rx/compare/v0.3.2...v0.3.3) (2020-03-18)
+
+
+### Features
+
+* add nullish coalescing operator evaluation ([397b38e](https://github.com/ianchi/ESpression-rx/commit/397b38ea7da1104b597128ea2b3b527fb2f88d08))
+* add optional chain evaluation ([218f2db](https://github.com/ianchi/ESpression-rx/commit/218f2dbc36fef74989dc9912c9a79c8c4f057546))
+* add reactive eval of destructuring assignmt ([74cd9f6](https://github.com/ianchi/ESpression-rx/commit/74cd9f6d8bd58f276ea9709cebb90ed2cacf63d2))
+
+
+### Bug Fixes
+
+* fixes regression in function call ([f5f5c3d](https://github.com/ianchi/ESpression-rx/commit/f5f5c3d3770cbd83e1a0edf71f2c1707256e0a98))
+* remove 'console' calls ([67d7b74](https://github.com/ianchi/ESpression-rx/commit/67d7b74df8c44ab3ff9b931204000dc919b71f3e))
+
 ### [0.3.2](https://github.com/ianchi/ESpression-rx/compare/v0.3.1...v0.3.2) (2020-01-29)
 
 
