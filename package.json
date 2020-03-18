@@ -10,26 +10,25 @@
   "es2015": "dist/esm2015/espression-rx.js",
   "types": "dist/src/main.d.ts",
   "private": false,
-  "dependencies": {
-    "tslib": "^1.10.0"
-  },
   "peerDependencies": {
-    "rxjs": "^6.5.2",
+    "tslib": "^1.11.1",
+    "rxjs": "^6.5.4",
     "espression": "^1.6.0"
   },
   "devDependencies": {
     "espression": "^1.6.0",
     "prettier": "^1.19.1",
-    "rimraf": "^3.0.1",
-    "rollup": "^1.30.1",
-    "rollup-plugin-typescript2": "^0.25.3",
+    "rimraf": "^3.0.2",
+    "rollup": "^2.0.6",
+    "rollup-plugin-typescript2": "^0.26.0",
     "rxjs": "^6.5.4",
     "standard-version": "^7.1.0",
     "ts-node": "^8.6.2",
-    "tslint": "^6.0.0",
-    "typedoc": "^0.16.9",
-    "typedoc-plugin-markdown": "^2.2.16",
-    "typescript": "^3.7.5"
+    "tslib": "^1.11.1",
+    "tslint": "^6.1.0",
+    "typedoc": "^0.17.0",
+    "typedoc-plugin-markdown": "^2.2.17",
+    "typescript": "^3.8.3"
   },
   "scripts": {
     "prebuild": "rimraf dist",
