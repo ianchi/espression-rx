@@ -176,14 +176,14 @@ export class ReactiveEval extends ES6StaticEval {
 
       default:
         const left = this.lvalue(node, context);
-    // if lvalue is reactive don't assign potencially an observable, but the resolved value
-    // the reactive object will emit anyway the resolved value
+        // if lvalue is reactive don't assign potencially an observable, but the resolved value
+        // the reactive object will emit anyway the resolved value
         if (isReactive(left.o) && rx)
-        return right.pipe(map(val => assignOpCB[node.operator](left.o, left.m, val)));
+          return right.pipe(map(val => assignOpCB[node.operator](left.o, left.m, val)));
 
-    // if it is a simple variable allow to assign the observable, to be used as alias
-    // otherwise until the value is resolved the lvalue won't see the assignment if used in
-    // other expression
+        // if it is a simple variable allow to assign the observable, to be used as alias
+        // otherwise until the value is resolved the lvalue won't see the assignment if used in
+        // other expression
         if (rx) right = right.pipe(shareReplay(1));
 
         return assignOpCB[operator](left.o, left.m, right);
@@ -424,7 +424,7 @@ export class ReactiveEval extends ES6StaticEval {
       }
     } else {
       obj = context;
-      func = this._eval(node.callee.object, context);
+      func = this._eval(node.callee, context);
 
       if (isObservable<any>(func)) {
         func.pipe(
@@ -445,4 +445,21 @@ export class ReactiveEval extends ES6StaticEval {
 }
 export function reactiveEvalFactory(): ReactiveEval {
   return new ReactiveEval();
+}
+
+function iterAt(iter: Iterable<any>, at: number): any {
+  let n = 0;
+
+  for (const e of iter) if (n++ === at) return e;
+
+  return undefined;
+}
+
+function iterSlice(iter: Iterable<any>, from: number): any {
+  let n = 0;
+  const res = [];
+
+  for (const e of iter) if (n++ >= from) res.push(e);
+
+  return res;
 }
