@@ -165,7 +165,6 @@ export class ReactiveEval extends ES6StaticEval {
         else if (isObservable(right))
           right = right.pipe(
             switchMap((r: any) => {
-              console.log('assign:', r);
               if (typeof r === 'undefined') r = this._eval(node.right, context);
 
               return isObservable(r) ? r : of(r);
@@ -303,8 +302,7 @@ export class ReactiveEval extends ES6StaticEval {
 
         if (resolved) return result;
 
-        console.warn('Returning unresolved observable from arrow function expression');
-        return resultOrObservable;
+        throw new Error('Returning unresolved observable from arrow function expression');
       } else return resultOrObservable;
     };
   }
