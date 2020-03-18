@@ -1,6 +1,11 @@
 .DS_Store
 node_modules
 dist
-.vscode
+.vscode/*
+!.vscode/launch.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/spellright.dict
+
 *.log
 .rpt2_cache
