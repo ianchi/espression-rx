@@ -408,12 +408,14 @@ export class ReactiveEval extends ES6StaticEval {
               (m.value === null || typeof m.value === 'undefined')
             )
               return of(undefined);
-            else
-              return this._resolve(
+            else {
+              const res = this._resolve(
                 context,
                 (...args) => ({ obj: m.obj, func: m.value, args }),
                 ...node.arguments
               );
+              return isObservable(res) ? res : of(res);
+            }
           })
         );
       else {
