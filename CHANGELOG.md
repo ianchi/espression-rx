@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.3.4](https://github.com/ianchi/ESpression-rx/compare/v0.3.3...v0.3.4) (2020-03-22)
+
+
+### Bug Fixes
+
+* regression in fcall on member exp ([303723e](https://github.com/ianchi/ESpression-rx/commit/303723ed7c6210229e7c09df6216019c56b18be5))
+
 ### [0.3.3](https://github.com/ianchi/ESpression-rx/compare/v0.3.2...v0.3.3) (2020-03-18)
 
 
