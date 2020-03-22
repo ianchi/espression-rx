@@ -398,7 +398,7 @@ export class ReactiveEval extends ES6StaticEval {
     // Getting it from 'this' is not reliable for async evaluation as it may have changed in later evals
 
     if (node.callee.type === MEMBER_EXP) {
-      member = this._member(node, context);
+      member = this._member(node.callee, context);
 
       if (isObservable<any>(member))
         return member.pipe<any>(
