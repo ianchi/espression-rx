@@ -178,7 +178,7 @@ export class ReactiveEval extends ES6StaticEval {
         // if lvalue is reactive don't assign potencially an observable, but the resolved value
         // the reactive object will emit anyway the resolved value
         if (isReactive(left.o) && rx)
-          return right.pipe(map(val => assignOpCB[node.operator](left.o, left.m, val)));
+          return right.pipe(map(val => assignOpCB[operator](left.o, left.m, val)));
 
         // if it is a simple variable allow to assign the observable, to be used as alias
         // otherwise until the value is resolved the lvalue won't see the assignment if used in
@@ -243,7 +243,7 @@ export class ReactiveEval extends ES6StaticEval {
           )
         );
 
-      if (isReactive(obj[member])) return obj[member];
+      if (isReactive(obj[member])) return { obj, member, value: obj[member] };
 
       return obj[GET_OBSERVABLE](member).pipe(
         // if the assigned value is an observable, switch to it
