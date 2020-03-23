@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.3.5](https://github.com/ianchi/ESpression-rx/compare/v0.3.4...v0.3.5) (2020-03-23)
+
+
+### Bug Fixes
+
+* error in reactive member ([54a3d99](https://github.com/ianchi/ESpression-rx/commit/54a3d990f1167706ac838d0b1e24b2f54a9a3e0e))
+* fcall of computed member ([417354b](https://github.com/ianchi/ESpression-rx/commit/417354bfbb779f6e8228252fb1d4db9dcecdba4f))
+
 ### [0.3.4](https://github.com/ianchi/ESpression-rx/compare/v0.3.3...v0.3.4) (2020-03-22)
 
 
