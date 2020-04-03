@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.3.6](https://github.com/ianchi/ESpression-rx/compare/v0.3.5...v0.3.6) (2020-04-03)
+
+
+### Bug Fixes
+
+* not unsusbcribing properly of shareReplay ([1e826f7](https://github.com/ianchi/ESpression-rx/commit/1e826f7883f44402f91e01d9a0127444f2789579))
+
 ### [0.3.5](https://github.com/ianchi/ESpression-rx/compare/v0.3.4...v0.3.5) (2020-03-23)
 
 
