@@ -183,7 +183,7 @@ export class ReactiveEval extends ES6StaticEval {
         // if it is a simple variable allow to assign the observable, to be used as alias
         // otherwise until the value is resolved the lvalue won't see the assignment if used in
         // other expression
-        if (rx) right = right.pipe(shareReplay(1));
+        if (rx) right = right.pipe(shareReplay({ bufferSize: 1, refCount: true }));
 
         return assignOpCB[operator](left.o, left.m, right);
     }
