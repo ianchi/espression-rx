@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.3.7](https://github.com/ianchi/ESpression-rx/compare/v0.3.6...v0.3.7) (2020-04-12)
+
+
+### Features
+
+* allow to pass lvalue unchecked ([a61b7f1](https://github.com/ianchi/ESpression-rx/commit/a61b7f1cbe7d68c9d6afb6bfdb4bb3c8a2a78152))
+
+
+### Bug Fixes
+
+* RxObject, must validate against null ([10f3be3](https://github.com/ianchi/ESpression-rx/commit/10f3be32148a1e704863cb159c181f4b472d5a7b))
+
 ### [0.3.6](https://github.com/ianchi/ESpression-rx/compare/v0.3.5...v0.3.6) (2020-04-03)
 
 
