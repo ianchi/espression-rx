@@ -29,8 +29,10 @@ import { AS_OBSERVABLE, GET_OBSERVABLE, isReactive } from './rxobject';
  * It returns an Observable which emits a new result when any dependent member emits a new value
  */
 export class ReactiveEval extends ES6StaticEval {
-  lvalue(node: INode, context: object): ILvalue {
+  lvalue(node: INode, context: object, unchecked?: boolean): ILvalue {
     const result = super.lvalue(node, context);
+    if (unchecked) return result;
+
     if (isObservable(result.o)) throw new Error('Left side object cannot be an observable.');
 
     if (isObservable(result.m)) {
