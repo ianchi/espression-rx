@@ -31,12 +31,13 @@ export function RxObject<T extends object>(base: T, deep = false, handler?: Prox
   const propSubscriptions = {} as { [P in keyof T]?: Subscription };
   const mainSubject = new BehaviorSubject<T>(base);
 
-  if (typeof base !== 'object') throw new Error('Base must be an object or array');
+  if (base === null || typeof base !== 'object') throw new Error('Base must be an object or array');
 
   if (deep) {
     for (const prop in base) {
       const node: any = base[prop];
-      if (typeof node === 'object' && !isReactive(node)) base[prop] = RxObject(node, true);
+      if (node !== null && typeof node === 'object' && !isReactive(node))
+        base[prop] = RxObject(node, true);
     }
   }
 
@@ -86,7 +87,7 @@ export function RxObject<T extends object>(base: T, deep = false, handler?: Prox
           propSubs.unsubscribe();
           delete propSubscriptions[prop];
         }
-        if (typeof value === 'object') {
+        if (value !== null && typeof value === 'object') {
           if (!isReactive(value)) value = RxObject(value, true);
           propSubscriptions[prop] = value[AS_OBSERVABLE]().subscribe((val: any) => {
             if (sub) sub.next(val);
