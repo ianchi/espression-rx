@@ -15,6 +15,23 @@ export const GET_OBSERVABLE = Symbol('getObservable');
 export const IS_REACTIVE = Symbol('isReactive');
 export const SET_OBSERVABLE = Symbol('setObservable');
 
+export interface IRxProperties<T> {
+  /** Returns an observable of the whole object */
+  [AS_OBSERVABLE]: () => Observable<T>;
+
+  /** Returns an observable of a specific member */
+  [GET_OBSERVABLE](prop: keyof T): Observable<any>;
+
+  /** Returns true if the object is Reactive */
+  [IS_REACTIVE](): boolean;
+
+  [SET_OBSERVABLE](
+    propName: keyof T,
+    inner: Observable<T[any]>,
+    operatorFn: (a: { [key: string]: any }, m: string, b: any) => any
+  ): Observable<T[any]>;
+}
+
 /** Array mutating methods that must trigger emit */
 const mutatingMethods: Array<string | number | symbol> = [
   'copyWithin',
