@@ -22,7 +22,7 @@ import {
 import { combineLatest, isObservable, Observable, of } from 'rxjs';
 import { map, share, shareReplay, switchMap, take } from 'rxjs/operators';
 
-import { AS_OBSERVABLE, GET_OBSERVABLE, isReactive } from './rxobject';
+import { AS_OBSERVABLE, GET_OBSERVABLE, isReactive, SET_OBSERVABLE } from './rxobject';
 
 /**
  * Extends ES5 StaticEval to perform reactive evaluation of expressions having Observable values.
@@ -177,14 +177,15 @@ export class ReactiveEval extends ES6StaticEval {
 
       default:
         const left = this.lvalue(node, context);
-        // if lvalue is reactive don't assign potencially an observable, but the resolved value
+        // if lvalue is reactive don't assign an observable, but the resolved value
         // the reactive object will emit anyway the resolved value
         if (isReactive(left.o) && rx)
-          return right.pipe(map(val => assignOpCB[operator](left.o, left.m, val)));
+          return (left.o as any)[SET_OBSERVABLE](left.m, right, assignOpCB[operator]);
 
         // if it is a simple variable allow to assign the observable, to be used as alias
         // otherwise until the value is resolved the lvalue won't see the assignment if used in
         // other expression
+        // TODO: handle the case of assignment with operation (+= / *= ...)
         if (rx) right = right.pipe(shareReplay({ bufferSize: 1, refCount: true }));
 
         return assignOpCB[operator](left.o, left.m, right);
@@ -385,7 +386,13 @@ export class ReactiveEval extends ES6StaticEval {
 
     return combineLatest(
       results.map((node, i) =>
-        isObs[i] === 1 ? node : isObs[i] === 2 ? node[AS_OBSERVABLE]() : of(node)
+        isObs[i] === 1
+          ? node
+          : isObs[i] === 2
+          ? node[AS_OBSERVABLE]().pipe(
+              switchMap(outer => (isObservable(outer) ? outer : of(outer)))
+            )
+          : of(node)
       )
     ).pipe(map(res => operatorCB(...res)));
   }

@@ -5,11 +5,15 @@
  * https://opensource.org/licenses/MIT
  */
 
-import { BehaviorSubject, Subscription } from 'rxjs';
+import { BehaviorSubject, isObservable, Observable, Subscription } from 'rxjs';
+import { map } from 'rxjs/operators';
 
-export const AS_OBSERVABLE = Symbol('asObservable'),
-  GET_OBSERVABLE = Symbol('getObservable'),
-  IS_REACTIVE = Symbol('isReactive');
+export const AS_OBSERVABLE = Symbol('asObservable');
+
+export const GET_OBSERVABLE = Symbol('getObservable');
+
+export const IS_REACTIVE = Symbol('isReactive');
+export const SET_OBSERVABLE = Symbol('setObservable');
 
 /** Array mutating methods that must trigger emit */
 const mutatingMethods: Array<string | number | symbol> = [
@@ -30,13 +34,14 @@ export function RxObject<T extends object>(base: T, deep = false, handler?: Prox
   const propSubjects: { [P in keyof T]?: BehaviorSubject<T[P]> } = {};
   const propSubscriptions = {} as { [P in keyof T]?: Subscription };
   const mainSubject = new BehaviorSubject<T>(base);
+  const innerObservable = {} as { [P in keyof T]?: Observable<T[P]> };
 
   if (base === null || typeof base !== 'object') throw new Error('Base must be an object or array');
 
   if (deep) {
     for (const prop in base) {
       const node: any = base[prop];
-      if (node !== null && typeof node === 'object' && !isReactive(node))
+      if (node !== null && typeof node === 'object' && !isReactive(node) && !isObservable(node))
         base[prop] = RxObject(node, true);
     }
   }
@@ -52,6 +57,26 @@ export function RxObject<T extends object>(base: T, deep = false, handler?: Prox
         return () => mainSubject.asObservable();
       } else if (prop === IS_REACTIVE) {
         return () => true;
+      } else if (prop === SET_OBSERVABLE) {
+        return (
+          propName: keyof T,
+          inner: Observable<T[any]>,
+          operatorFn: (a: { [key: string]: any }, m: string, b: any) => any
+        ): Observable<T[any]> => {
+          innerObservable[propName] = inner;
+
+          return inner.pipe(
+            map(val =>
+              operatorFn(
+                innerObservable[propName] === inner
+                  ? receiver
+                  : { [propName as string]: target[propName] },
+                propName as string,
+                val
+              )
+            )
+          );
+        };
       }
       const cb = target[<keyof T>prop];
       if (Array.isArray(target) && typeof cb === 'function' && mutatingMethods.indexOf(prop) >= 0) {
@@ -74,6 +99,10 @@ export function RxObject<T extends object>(base: T, deep = false, handler?: Prox
       if (handler && handler.set) {
         if (!handler.set(target, prop, value, receiver)) return false;
       } else target[prop] = value;
+
+      // if something new is assigned, previous assigned inner observable
+      if (prop in innerObservable) delete innerObservable[prop];
+
       const sub = propSubjects[prop];
       if (sub) sub.next(target[prop]);
 
@@ -87,7 +116,7 @@ export function RxObject<T extends object>(base: T, deep = false, handler?: Prox
           propSubs.unsubscribe();
           delete propSubscriptions[prop];
         }
-        if (value !== null && typeof value === 'object') {
+        if (value !== null && typeof value === 'object' && !isObservable(value)) {
           if (!isReactive(value)) value = RxObject(value, true);
           propSubscriptions[prop] = value[AS_OBSERVABLE]().subscribe((val: any) => {
             if (sub) sub.next(val);
