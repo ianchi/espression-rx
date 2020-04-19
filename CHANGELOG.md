@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.3.8](https://github.com/ianchi/ESpression-rx/compare/v0.3.7...v0.3.8) (2020-04-19)
+
+
+### Features
+
+* export RxObject interface ([f30434b](https://github.com/ianchi/ESpression-rx/commit/f30434bb7193e7d84e45e8a529e045fe363541f6))
+
+
+### Bug Fixes
+
+* assignement of observable to reactive object ([0ccd63c](https://github.com/ianchi/ESpression-rx/commit/0ccd63c955ddd884edbba5f4625b619beca2fc9c))
+
 ### [0.3.7](https://github.com/ianchi/ESpression-rx/compare/v0.3.6...v0.3.7) (2020-04-12)
 
 
