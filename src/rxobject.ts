@@ -44,6 +44,7 @@ const mutatingMethods: Array<string | number | symbol> = [
   'splice',
   'unshift',
 ];
+const rxCache = new WeakMap<object, { deep?: any; proxy?: any }>();
 
 // tslint:disable-next-line:naming-convention
 // tslint:disable-next-line:typedef
@@ -54,14 +55,17 @@ export function RxObject<T extends object>(base: T, deep = false, handler?: Prox
   const innerObservable = {} as { [P in keyof T]?: Observable<T[P]> };
 
   if (base === null || typeof base !== 'object') throw new Error('Base must be an object or array');
+  const rawBase = base;
+  let cache = rxCache.get(rawBase);
 
   if (deep) {
+    if (cache?.deep) return cache.deep;
     for (const prop in base) {
       const node: any = base[prop];
       if (node !== null && typeof node === 'object' && !isReactive(node) && !isObservable(node))
         base[prop] = RxObject(node, true);
     }
-  }
+  } else if (cache?.proxy) return cache.proxy;
 
   const proxy = new Proxy<T>(base, {
     get: (target: T, prop: keyof T | symbol, receiver: any) => {
@@ -166,6 +170,10 @@ export function RxObject<T extends object>(base: T, deep = false, handler?: Prox
     },
   });
 
+  if (!cache) cache = {};
+  if (deep) cache.deep = base;
+  else cache.proxy = base;
+  rxCache.set(rawBase, cache);
   return proxy;
 }
 
