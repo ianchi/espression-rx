@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.3.10](https://github.com/ianchi/ESpression-rx/compare/v0.3.9...v0.3.10) (2020-04-26)
+
+
+### Bug Fixes
+
+* **RxObject:** cache to avoid circular ref in deep ([5f29f08](https://github.com/ianchi/ESpression-rx/commit/5f29f08599ceee360a3a8959922ae1e5bfbb4306))
+* **RxObject:** fix deep not working on assignement ([9b39c79](https://github.com/ianchi/ESpression-rx/commit/9b39c79c516f832b2a5da972684d73b2b1c9f26c))
+
 ### [0.3.9](https://github.com/ianchi/ESpression-rx/compare/v0.3.8...v0.3.9) (2020-04-19)
 
 ### [0.3.8](https://github.com/ianchi/ESpression-rx/compare/v0.3.7...v0.3.8) (2020-04-19)
