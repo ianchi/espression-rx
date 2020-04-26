@@ -124,11 +124,6 @@ export function RxObject<T extends object>(base: T, deep = false, handler?: Prox
       // if something new is assigned, previous assigned inner observable
       if (prop in innerObservable) delete innerObservable[prop];
 
-      const sub = propSubjects[prop];
-      if (sub) sub.next(target[prop]);
-
-      mainSubject.next(target);
-
       // also emit if nested object changes
 
       if (deep) {
@@ -138,13 +133,20 @@ export function RxObject<T extends object>(base: T, deep = false, handler?: Prox
           delete propSubscriptions[prop];
         }
         if (value !== null && typeof value === 'object' && !isObservable(value)) {
-          if (!isReactive(value)) value = RxObject(value, true);
+          if (!isReactive(value)) target[prop] = value = RxObject(value, true);
           propSubscriptions[prop] = value[AS_OBSERVABLE]().subscribe((val: any) => {
+            const sub = propSubjects[prop];
             if (sub) sub.next(val);
             mainSubject.next(target);
           });
+          return true;
         }
       }
+      const sub = propSubjects[prop];
+      if (sub) sub.next(target[prop]);
+
+      mainSubject.next(target);
+
       return true;
     },
 
