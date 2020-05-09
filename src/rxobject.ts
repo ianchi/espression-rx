@@ -16,7 +16,7 @@ export const GET_OBSERVABLE = Symbol('getObservable');
 export const IS_REACTIVE = Symbol('isReactive');
 export const SET_OBSERVABLE = Symbol('setObservable');
 
-export interface IRxProperties<T extends object> {
+export interface IRxProperties<T> {
   /** Returns an observable of the whole object */
   [AS_OBSERVABLE]: () => Observable<T>;
 
@@ -60,35 +60,6 @@ function isMutatingMethod(method: any): method is MutatingMethod {
   return typeof method === 'string' && mutatingMethods.indexOf(method) >= 0;
 }
 const rxCache = new WeakMap<object, { deep?: any; proxy?: any }>();
-
-// tslint:disable-next-line:naming-convention
-// tslint:disable-next-line:typedef
-export function RxObject<T extends object>(base: T, deep = false, handler?: ProxyHandler<T>): T {
-  if (base === null || typeof base !== 'object') throw new Error('Base must be an object or array');
-  const rawBase = base;
-  let cache = rxCache.get(rawBase);
-
-  if (deep && (Array.isArray(base) || isPlainObject(base))) {
-    if (cache?.deep) return cache.deep;
-    for (const prop in base) {
-      const node: any = base[prop];
-      if (node !== null && typeof node === 'object' && !isReactive(node) && !isObservable(node))
-        base[prop] = RxObject(node, true);
-    }
-  } else if (cache?.proxy) return cache.proxy;
-
-  const proxy = new Proxy<T>(base, new RxHandler(base, deep, handler));
-
-  if (!cache) cache = {};
-  if (deep) cache.deep = base;
-  else cache.proxy = base;
-  rxCache.set(rawBase, cache);
-  return proxy;
-}
-
-export function isReactive(obj: any): boolean {
-  return !!(obj && typeof obj[IS_REACTIVE] === 'function');
-}
 
 class RxHandler<T extends object> implements ProxyHandler<T> {
   /** Subject for the whole object */
@@ -229,4 +200,31 @@ class RxHandler<T extends object> implements ProxyHandler<T> {
     }
     return ret;
   }
+}
+
+export function RxObject<T extends object>(base: T, deep = false, handler?: ProxyHandler<T>): T {
+  if (base === null || typeof base !== 'object') throw new Error('Base must be an object or array');
+  const rawBase = base;
+  let cache = rxCache.get(rawBase);
+
+  if (deep && (Array.isArray(base) || isPlainObject(base))) {
+    if (cache?.deep) return cache.deep;
+    for (const prop in base) {
+      const node: any = base[prop];
+      if (node !== null && typeof node === 'object' && !isReactive(node) && !isObservable(node))
+        base[prop] = RxObject(node, true);
+    }
+  } else if (cache?.proxy) return cache.proxy;
+
+  const proxy = new Proxy<T>(base, new RxHandler(base, deep, handler));
+
+  if (!cache) cache = {};
+  if (deep) cache.deep = base;
+  else cache.proxy = base;
+  rxCache.set(rawBase, cache);
+  return proxy;
+}
+
+export function isReactive<T>(obj: T | IRxProperties<T>): obj is IRxProperties<T> {
+  return !!(obj && typeof (obj as any)[IS_REACTIVE] === 'function');
 }
