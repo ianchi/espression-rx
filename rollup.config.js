@@ -1,4 +1,5 @@
 import typescript from 'rollup-plugin-typescript2';
+import nodeResolve from '@rollup/plugin-node-resolve';
 
 import pkg from './package.json';
 import path from 'path';
@@ -21,7 +22,7 @@ export default [
         sourcemap: true,
       },
     ],
-    plugins: [typescript()],
+    plugins: [nodeResolve(), typescript()],
   },
 
   {
@@ -33,6 +34,7 @@ export default [
       sourcemap: true,
     },
     plugins: [
+      nodeResolve(),
       typescript({
         useTsconfigDeclarationDir: true,
         tsconfigOverride: {

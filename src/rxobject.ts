@@ -5,6 +5,7 @@
  * https://opensource.org/licenses/MIT
  */
 
+import isPlainObject from 'is-plain-object';
 import { BehaviorSubject, isObservable, Observable, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
 
@@ -67,7 +68,7 @@ export function RxObject<T extends object>(base: T, deep = false, handler?: Prox
   const rawBase = base;
   let cache = rxCache.get(rawBase);
 
-  if (deep) {
+  if (deep && (Array.isArray(base) || isPlainObject(base))) {
     if (cache?.deep) return cache.deep;
     for (const prop in base) {
       const node: any = base[prop];
@@ -137,7 +138,8 @@ class RxHandler<T extends object> implements ProxyHandler<T> {
         this.subscriptions[property]!.unsubscribe();
         delete this.subscriptions[property];
       }
-      if (value !== null && typeof value === 'object' && !isObservable(value)) {
+      // only convert to RxObject plain objects and arrays
+      if (!isObservable(value) && (Array.isArray(value) || isPlainObject(value))) {
         if (!isReactive(value)) target[property] = value = RxObject(value, true);
         this.subscriptions[property] = value[AS_OBSERVABLE]().subscribe((val: any) => {
           const sub = this.properties$[property];
