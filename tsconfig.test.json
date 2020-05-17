@@ -1,8 +1,0 @@
-{
-  "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "module": "commonjs",
-    "lib": ["ES2015", "DOM"]
-  },
-  "files": ["test/test.ts"]
-}

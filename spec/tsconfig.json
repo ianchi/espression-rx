@@ -1,0 +1,11 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "ES6",
+    "downlevelIteration": true,
+    "esModuleInterop": true
+  },
+  "files": [],
+  "include": ["./**/*.d.ts", "./**/*.ts"]
+}
