@@ -17,9 +17,13 @@ import {
   RESOLVE_MEMBER,
   RESOLVE_SHORT_CIRCUITED,
   REST_ELE,
+  unsuportedError,
+  preUpdateOpCB,
+  postUpdateOpCB,
+  UPDATE_EXP,
 } from 'espression';
-import { from, isObservable, Observable, of } from 'rxjs';
-import { map, share, shareReplay, switchMap, take } from 'rxjs/operators';
+import { from, isObservable, Observable, of, merge } from 'rxjs';
+import { map, share, shareReplay, switchMap, take, ignoreElements } from 'rxjs/operators';
 
 import { combineMixed } from './combineMixed';
 import { AS_OBSERVABLE, GET_OBSERVABLE, isReactive, SET_OBSERVABLE } from './rxobject';
@@ -38,11 +42,18 @@ export class ReactiveEval extends ES6StaticEval {
     return unresolved ? result : immediateResolve(result);
   }
 
-  _assignPattern(node: INode, operator: string, right: any, context: any): any {
+  _assignPattern(
+    node: INode,
+    operator: string,
+    right: any,
+    context: any,
+    defaultsContext?: any
+  ): any {
     const rx = isObservable(right);
+    let combined: any[] | Observable<any[]> = [];
     switch (node.type) {
       case ARRAY_PAT:
-        if (operator !== '=') throw new Error('Invalid left-hand side in assignment');
+        if (operator !== '=') throw new TypeError('Invalid left-hand side in assignment');
         right = mapMixed(right, (r: any) => {
           if (!r || typeof r[Symbol.iterator] !== 'function')
             throw new Error('TypeError: must be iterable');
@@ -58,18 +69,25 @@ export class ReactiveEval extends ES6StaticEval {
           if (!node.elements[i]) continue;
           const rest = node.elements[i].type === REST_ELE;
 
-          this._assignPattern(
-            rest ? node.elements[i].argument : node.elements[i],
-            operator,
-            mapMixed(right, v => (rest ? iterSlice : iterAt)(v, i)),
-            context
+          combined.push(
+            this._assignPattern(
+              rest ? node.elements[i].argument : node.elements[i],
+              operator,
+              mapMixed(right, v => (rest ? iterSlice : iterAt)(v, i)),
+              context,
+              defaultsContext
+            )
           );
         }
+
+        // merge without values, just to propagate subscription, even if it is never referenced.
+        combined = combineMixed(combined, false);
+        if (isObservable(combined)) right = merge(right, combined.pipe(ignoreElements()));
 
         break;
 
       case OBJECT_PAT:
-        if (operator !== '=') throw new Error('Invalid left-hand side in assignment');
+        if (operator !== '=') throw new SyntaxError('Invalid left-hand side in assignment');
         right = mapMixed(right, (r: any) => {
           if (r === null || typeof r === 'undefined')
             throw new Error('TypeError: must be convertible to object');
@@ -93,27 +111,34 @@ export class ReactiveEval extends ES6StaticEval {
               ? node.properties[i].key.value
               : node.properties[i].key.name;
 
-          this._assignPattern(
-            rest ? node.properties[i].argument : node.properties[i].value,
-            operator,
-            mapMixed(right, (r: any) => {
-              if (rest)
-                return Object.keys(r)
-                  .filter(k => !(k in visited))
-                  .reduce((rst: any, k) => ((rst[k] = r[k]), rst), {});
-              visited[key!] = true;
-              return r[key!];
-            }),
-            context
+          combined.push(
+            this._assignPattern(
+              rest ? node.properties[i].argument : node.properties[i].value,
+              operator,
+              mapMixed(right, (r: any) => {
+                if (rest)
+                  return Object.keys(r)
+                    .filter(k => !(k in visited))
+                    .reduce((rst: any, k) => ((rst[k] = r[k]), rst), {});
+                visited[key!] = true;
+                return r[key!];
+              }),
+              context,
+              defaultsContext
+            )
           );
         }
+
+        // merge without values, just to propagate subscription, even if it is never referenced.
+        combined = combineMixed(combined, false);
+        if (isObservable(combined)) right = merge(right, combined.pipe(ignoreElements()));
 
         break;
 
       case 'AssignmentPattern':
         // only assign default if the value being assigned is `undefined`
         right = switchMixed(right, r =>
-          typeof r === 'undefined' ? this._eval(node.right, context) : r
+          typeof r === 'undefined' ? this._eval(node.right, defaultsContext ?? context) : r
         );
 
         return this._assignPattern(node.left, operator, right, context);
@@ -124,14 +149,20 @@ export class ReactiveEval extends ES6StaticEval {
         // the reactive object will emit anyway the resolved value
         if (isReactive(left.o) && rx)
           return (left.o as any)[SET_OBSERVABLE](left.m, right, assignOpCB[operator]);
+        else if (isObservable(left.o[left.m]) && operator !== '=')
+          throw new TypeError('Cannot update observable value');
 
         // if it is a simple variable allow to assign the observable, to be used as alias
         // otherwise until the value is resolved the lvalue won't see the assignment if used in
         // other expression
-        // TODO: handle the case of assignment with operation (+= / *= ...)
-        if (rx) right = right.pipe(shareReplay({ bufferSize: 1, refCount: true }));
+        if (rx && operator === '=')
+          return assignOpCB[operator](
+            left.o,
+            left.m,
+            right.pipe(shareReplay({ bufferSize: 1, refCount: true }))
+          );
 
-        return assignOpCB[operator](left.o, left.m, right);
+        return mapMixed(right, r => assignOpCB[operator](left.o, left.m, r));
     }
 
     return right;
@@ -157,6 +188,14 @@ export class ReactiveEval extends ES6StaticEval {
     };
   }
 
+  protected UpdateExpression(node: INode, context: keyedObject): any {
+    const cb = node.prefix ? preUpdateOpCB : postUpdateOpCB;
+    if (!(node.operator in cb)) throw unsuportedError(UPDATE_EXP, node.operator);
+    const left = this.lvalue(node.argument, context);
+    if (isObservable(left.o[left.m])) throw new TypeError('Cannot update observable value');
+
+    return cb[node.operator](left.o, left.m);
+  }
   protected _resolve(
     context: object,
     mode: number,
