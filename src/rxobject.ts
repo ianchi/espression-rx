@@ -70,6 +70,7 @@ class RxHandler<T extends object> implements ProxyHandler<T> {
   private subscriptions: { [P in keyof T]?: Subscription } = {};
   /** Inner Observable currently assigned to a property via SET_OBSERVABLE */
   private inner$: { [P in keyof T]?: Observable<T[P]> } = {};
+  innnerUpdate = false;
 
   constructor(target: T, private deep: boolean = false, private handler?: ProxyHandler<T>) {
     this.main$ = new BehaviorSubject<T>(target);
@@ -100,7 +101,7 @@ class RxHandler<T extends object> implements ProxyHandler<T> {
     } else target[property] = value;
 
     // if something new is assigned, previous assigned inner observable
-    if (property in this.inner$) delete this.inner$[property];
+    if (property in this.inner$ && !this.innnerUpdate) delete this.inner$[property];
 
     // also emit if nested object changes
 
@@ -180,13 +181,17 @@ class RxHandler<T extends object> implements ProxyHandler<T> {
     this.inner$[property] = inner;
 
     return inner.pipe(
-      map(val =>
-        operatorFn(
+      map(val => {
+        this.innnerUpdate = true;
+        const res = operatorFn(
           this.inner$[property] === inner ? receiver : { [property as string]: target[property] },
           property as string,
           val
-        )
-      )
+        );
+        this.innnerUpdate = false;
+
+        return res;
+      })
     );
   }
 
@@ -202,7 +207,11 @@ class RxHandler<T extends object> implements ProxyHandler<T> {
   }
 }
 
-export function RxObject<T extends object>(base: T, deep = false, handler?: ProxyHandler<T>): T {
+export function RxObject<T extends object>(
+  base: T,
+  deep = false,
+  handler?: ProxyHandler<T>
+): IRxProperties<T> & T {
   if (base === null || typeof base !== 'object') throw new Error('Base must be an object or array');
   const rawBase = base;
   let cache = rxCache.get(rawBase);
@@ -222,7 +231,7 @@ export function RxObject<T extends object>(base: T, deep = false, handler?: Prox
   if (deep) cache.deep = base;
   else cache.proxy = base;
   rxCache.set(rawBase, cache);
-  return proxy;
+  return proxy as IRxProperties<T> & T;
 }
 
 export function isReactive<T>(obj: T | IRxProperties<T>): obj is IRxProperties<T> {
