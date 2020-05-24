@@ -205,7 +205,7 @@ export class ReactiveEval extends ES6StaticEval {
     // Resolve all operands, converting the result to observable if non plain scalar (RxObject or Promise)
 
     // eslint-disable-next-line no-bitwise
-    return (mode & RESOLVE_SHORT_CIRCUITED ? switchMixed : mapMixed)(
+    return (mode & RESOLVE_SHORT_CIRCUITED || mode & RESOLVE_MEMBER ? switchMixed : mapMixed)(
       combineMixed(
         operands.map(
           (node: INode, i: number) =>
