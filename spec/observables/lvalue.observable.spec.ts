@@ -2,7 +2,7 @@
 /// <reference path="../support/matchers_types.d.ts"/>
 
 import 'jasmine';
-import { isObservable } from 'rxjs';
+import { isObservable, BehaviorSubject } from 'rxjs';
 import { testScheduler } from '../helpers/espression';
 import { toBeObservableMatcher } from '../helpers/observable';
 
@@ -65,6 +65,54 @@ describe('Observable Lvalues and any Rvalue', () => {
 
       const context = { a: 1, b: 5, o: cold(object, values) };
       expect(() => evaluate(expr, context)).toThrowError();
+    });
+  });
+
+  it('should fail on unresolved lvalue object', () => {
+    testScheduler().run(({ cold }) => {
+      const expr = 'o.a = 10';
+      const object = '---a-b-c-|';
+
+      const context = { a: 1, b: 5, o: cold(object, { a: { a: 10 }, b: { a: 20 }, c: { a: 30 } }) };
+      expect(() => evaluate(expr, context)).toThrowError();
+    });
+  });
+
+  it('should fail on unresolved lvalue member', () => {
+    testScheduler().run(({ cold }) => {
+      const expr = 'arr[o].a = 10';
+      const object = '---0-1-2-|';
+
+      const context = {
+        a: 1,
+        b: 5,
+        arr: [{ a: 10 }, { a: 20 }, { a: 30 }],
+        o: cold(object, values),
+      };
+      expect(() => evaluate(expr, context)).toThrowError();
+    });
+  });
+
+  it('should assign on resolved observable', () => {
+    testScheduler().run(() => {
+      const expr = 'arr[o].a = 123';
+
+      const x = { a: 10 },
+        y = { a: 20 },
+        z = { a: 30 };
+      const context = {
+        arr: [x, y, z],
+        o: new BehaviorSubject(0),
+      };
+      context.o.next(1);
+      const e1 = evaluate(expr, context);
+      context.o.next(2);
+
+      expect(e1).toBe(123);
+
+      expect(x.a).toBe(10);
+      expect(y.a).toBe(123);
+      expect(z.a).toBe(30);
     });
   });
 });
