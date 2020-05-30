@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.3.11](https://github.com/ianchi/ESpression-rx/compare/v0.3.10...v0.3.11) (2020-05-30)
+
+
+### Bug Fixes
+
+* **combineMixed:** remove object input ([c87992e](https://github.com/ianchi/ESpression-rx/commit/c87992ee98de2a12d9a71536bbc68b85465e2ad5))
+* **reactive:** error in member expr on RxObject ([fdf2936](https://github.com/ianchi/ESpression-rx/commit/fdf2936a4ce9087eb22cd7d3c2e3cdc2e3985fd9))
+* **RxObject:** error on assignment of observable ([9386568](https://github.com/ianchi/ESpression-rx/commit/93865688dfa6ae44a01c71dae714b80b22d0ac08))
+* evaluation errors ([a37a39c](https://github.com/ianchi/ESpression-rx/commit/a37a39cc38ee4c2ab655aabf79294851ac2ba96c))
+* **RxObject:** only deep recurse in plain objects ([b5cc731](https://github.com/ianchi/ESpression-rx/commit/b5cc73136b486483486474e6ee1ea2d8a3bc671b))
+
 ### [0.3.10](https://github.com/ianchi/ESpression-rx/compare/v0.3.9...v0.3.10) (2020-04-26)
 
 
