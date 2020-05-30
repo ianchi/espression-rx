@@ -273,3 +273,42 @@ describe('Basic Numeric operations on observables', () => {
     });
   });
 });
+
+describe('Operations with external observables', () => {
+  const values = {
+    0: 0,
+    1: 1,
+    2: 2,
+    3: 3,
+    4: 4,
+    5: 5,
+    6: 6,
+    7: 7,
+    8: 8,
+    9: 9,
+    a: 'a',
+    b: 'b',
+    c: 'c',
+    o: { 1: 'o1', 2: 'o2', 3: 'o3' },
+    p: { 1: 'p1', 2: 'p2', 3: 'p3' },
+    q: { 1: 'q1', 2: 'q2', 3: 'q3' },
+    u: undefined,
+    T: true,
+    F: false,
+  };
+  it('should return observable of sums with one operand', () => {
+    testScheduler().run(({ expectObservable, cold }) => {
+      const context = {
+        a: 1,
+        o: cold('1-2------3|', values),
+        f: (v: number) => v > 1 && cold(`${v}9-8|`, values),
+      };
+      const e1 = evaluate('f(o)', context);
+      const expected = 'F-29-8---39-8|';
+
+      expect(isObservable(e1)).toBeTrue();
+
+      if (isObservable(e1)) expectObservable(e1).toBe(expected, values);
+    });
+  });
+});
