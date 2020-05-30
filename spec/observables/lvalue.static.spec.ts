@@ -1,8 +1,15 @@
-// eslint-disable-next-line @typescript-eslint/triple-slash-reference
+/**
+ * Copyright (c) 2020 Adrian Panella <ianchi74@outlook.com>
+ * This software is released under the MIT License.
+ * https://opensource.org/licenses/MIT
+ */
+
+// eslint-disable-next-line @typescript-eslint/triple-slash-reference, spaced-comment
 /// <reference path="../support/matchers_types.d.ts"/>
 
 import 'jasmine';
 import { isObservable } from 'rxjs';
+
 import { testScheduler } from '../helpers/espression';
 import { toBeObservableMatcher } from '../helpers/observable';
 

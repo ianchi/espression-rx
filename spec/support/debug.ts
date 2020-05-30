@@ -5,12 +5,15 @@
  * https://opensource.org/licenses/MIT
  */
 
+/* eslint-disable no-console */
+
+import assert from 'assert';
+
 import { ESnextParser } from 'espression';
 import { TestScheduler } from 'rxjs/testing';
 
 import { reactiveEvalFactory } from '../../src/reactive';
 import { RxObject, GET_OBSERVABLE } from '../../src/main';
-import assert from 'assert';
 
 const rxEval = reactiveEvalFactory();
 const parser = new ESnextParser(true, undefined, undefined, false);
@@ -18,7 +21,7 @@ const parser = new ESnextParser(true, undefined, undefined, false);
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const variableDiff = require('variable-diff'); // eslint-disable-line @typescript-eslint/no-var-requires
 
-export function* makeIterator() {
+export function* makeIterator(): Generator<number, void, unknown> {
   yield 1;
   yield 2;
 }

@@ -1,3 +1,11 @@
+/**
+ * Copyright (c) 2020 Adrian Panella <ianchi74@outlook.com>
+ * This software is released under the MIT License.
+ * https://opensource.org/licenses/MIT
+ */
+
+/* eslint-disable no-console */
+
 import chalk from 'chalk';
 import 'jasmine';
 
@@ -23,29 +31,30 @@ const failed: jasmine.CustomReporterResult[] = [];
 let total = 0;
 const suiteFailures: jasmine.CustomReporterResult[] = [];
 export class DiffReporter implements jasmine.CustomReporter {
-  jasmineStarted() {
+  jasmineStarted(): void {
     console.log('Starting tests');
   }
 
-  specStarted() {
+  specStarted(): void {
     process.stdout.write(chalk.green('.'));
   }
-  specDone(result: jasmine.CustomReporterResult) {
+
+  specDone(result: jasmine.CustomReporterResult): void {
     total++;
     if (result.failedExpectations) failed.push(result);
   }
 
-  suiteDone(result: jasmine.CustomReporterResult) {
+  suiteDone(result: jasmine.CustomReporterResult): void {
     if (result.failedExpectations) suiteFailures.push(result);
   }
 
-  jasmineDone(run: jasmine.RunDetails) {
+  jasmineDone(run: jasmine.RunDetails): void {
     console.log('\n');
 
     if (run.failedExpectations)
       for (const fail of run.failedExpectations) {
         console.log(chalk.red(fail.message));
-        console.log(`Trace:\n${fail.trace}`);
+        console.log(`Trace:\n${fail.trace.message}`);
       }
 
     this.print(suiteFailures, true);
@@ -54,7 +63,7 @@ export class DiffReporter implements jasmine.CustomReporter {
     console.log(`\n${total} specs, ${num} failures\n`);
   }
 
-  print(failures: jasmine.CustomReporterResult[], stack = false) {
+  print(failures: jasmine.CustomReporterResult[], stack = false): number {
     let num = 0;
     for (const result of failures)
       if (result.failedExpectations)

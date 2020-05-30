@@ -33,7 +33,7 @@ import { AS_OBSERVABLE, GET_OBSERVABLE, isReactive, SET_OBSERVABLE } from './rxo
  * It returns an Observable which emits a new result when any dependent member emits a new value
  */
 export class ReactiveEval extends ES6StaticEval {
-  lvalue(node: INode, context: object, unresolved?: boolean): ILvalue {
+  lvalue(node: INode, context: keyedObject, unresolved?: boolean): ILvalue {
     const result = super.lvalue(node, context);
 
     // allow observable as lvalue only if it can be immediately resolved at the moment of evaluation
@@ -42,12 +42,13 @@ export class ReactiveEval extends ES6StaticEval {
     return unresolved ? result : immediateResolve(result);
   }
 
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   _assignPattern(
     node: INode,
     operator: string,
     right: any,
-    context: any,
-    defaultsContext?: any
+    context: keyedObject,
+    defaultsContext?: keyedObject
   ): any {
     const rx = isObservable(right);
     let combined: any[] | Observable<any[]> = [];
@@ -117,9 +118,15 @@ export class ReactiveEval extends ES6StaticEval {
               operator,
               mapMixed(right, (r: any) => {
                 if (rest)
-                  return Object.keys(r)
-                    .filter(k => !(k in visited))
-                    .reduce((rst: any, k) => ((rst[k] = r[k]), rst), {});
+                  return (
+                    Object.keys(r)
+                      .filter(k => !(k in visited))
+                      // eslint-disable-next-line no-return-assign
+                      .reduce((rst: any, k) => {
+                        rst[k] = r[k];
+                        return rst;
+                      }, {})
+                  );
                 visited[key!] = true;
                 return r[key!];
               }),
@@ -149,7 +156,7 @@ export class ReactiveEval extends ES6StaticEval {
         // the reactive object will emit anyway the resolved value
         if (isReactive(left.o) && rx)
           return (left.o as any)[SET_OBSERVABLE](left.m, right, assignOpCB[operator]);
-        else if (isObservable(left.o[left.m]) && operator !== '=')
+        if (isObservable(left.o[left.m]) && operator !== '=')
           throw new TypeError('Cannot update observable value');
 
         // if it is a simple variable allow to assign the observable, to be used as alias
@@ -180,6 +187,7 @@ export class ReactiveEval extends ES6StaticEval {
   protected ArrowFunctionExpression(node: INode, context: keyedObject): any {
     const es6Func = super.ArrowFunctionExpression(node, context);
 
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     return (...params: any[]) => {
       return immediateResolve(
         es6Func(...params),
@@ -196,8 +204,9 @@ export class ReactiveEval extends ES6StaticEval {
 
     return cb[node.operator](left.o, left.m);
   }
+
   protected _resolve(
-    context: object,
+    context: keyedObject,
     mode: number,
     operatorCB: (...args: any[]) => any,
     ...operands: INode[]

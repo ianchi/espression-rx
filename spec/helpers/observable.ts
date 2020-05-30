@@ -1,3 +1,9 @@
+/**
+ * Copyright (c) 2020 Adrian Panella <ianchi74@outlook.com>
+ * This software is released under the MIT License.
+ * https://opensource.org/licenses/MIT
+ */
+
 import { isObservable } from 'rxjs';
 
 export const toBeObservableMatcher: jasmine.CustomMatcherFactories = {
@@ -6,11 +12,13 @@ export const toBeObservableMatcher: jasmine.CustomMatcherFactories = {
     _customEqualityTesters: readonly jasmine.CustomEqualityTester[]
   ): jasmine.CustomMatcher {
     return {
-      compare(actual: any, ...params: any[]): jasmine.CustomMatcherResult {
+      compare<T>(actual: T, ...params: any[]): jasmine.CustomMatcherResult {
         const pass = isObservable(actual);
         return {
           pass,
-          message: `Expected ${params?.[0] ?? ''} ${pass ? 'not to' : 'to'} be Observable`,
+          message: `Expected ${(params?.[0] as string) ?? ''} ${
+            pass ? 'not to' : 'to'
+          } be Observable`,
         };
       },
     };

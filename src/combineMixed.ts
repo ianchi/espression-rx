@@ -19,11 +19,12 @@ export function combineMixed(input: any[], asObservable: false): Observable<any[
 export function combineMixed(input: any[], asObservable = true): Observable<any[]> | any[] {
   if (!Array.isArray(input)) throw new Error('Input must be an array');
   let pos = 0;
-  const isObs: Array<number | false> = [],
-    hasObs = input.reduce(
-      (acum, val, i) => (isObs[i] = isObservable(val) && pos++) !== false || acum,
-      false
-    ); // tslint:disable-line:no-conditional-assignment
+  const isObs: Array<number | false> = [];
+  const hasObs = input.reduce(
+    // eslint-disable-next-line no-return-assign
+    (acum, val, i) => (isObs[i] = isObservable(val) && pos++) !== false || acum,
+    false
+  );
 
   if (!hasObs) return asObservable ? of(input) : input;
 

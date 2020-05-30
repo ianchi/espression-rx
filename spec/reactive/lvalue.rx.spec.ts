@@ -1,12 +1,19 @@
-// eslint-disable-next-line @typescript-eslint/triple-slash-reference
+/**
+ * Copyright (c) 2020 Adrian Panella <ianchi74@outlook.com>
+ * This software is released under the MIT License.
+ * https://opensource.org/licenses/MIT
+ */
+
+// eslint-disable-next-line @typescript-eslint/triple-slash-reference, spaced-comment
 /// <reference path="../support/matchers_types.d.ts"/>
 
 import 'jasmine';
 import { isObservable } from 'rxjs';
+import { tap } from 'rxjs/operators';
+
 import { testScheduler } from '../helpers/espression';
 import { toBeObservableMatcher } from '../helpers/observable';
 import { RxObject, IRxProperties, GET_OBSERVABLE } from '../../src/main';
-import { tap } from 'rxjs/operators';
 
 const evaluate: (expr: string, context: any) => any = (global as any).espression.evaluate;
 

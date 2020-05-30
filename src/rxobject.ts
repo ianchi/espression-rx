@@ -59,17 +59,23 @@ const mutatingMethods: string[] = [
 function isMutatingMethod(method: any): method is MutatingMethod {
   return typeof method === 'string' && mutatingMethods.indexOf(method) >= 0;
 }
+// eslint-disable-next-line @typescript-eslint/ban-types
 const rxCache = new WeakMap<object, { deep?: any; proxy?: any }>();
 
+// eslint-disable-next-line @typescript-eslint/ban-types
 class RxHandler<T extends object> implements ProxyHandler<T> {
   /** Subject for the whole object */
   private main$: BehaviorSubject<T>;
+
   /** Map of subjects for each property */
   private properties$: { [P in keyof T]?: BehaviorSubject<T[P]> } = {};
+
   /**  */
   private subscriptions: { [P in keyof T]?: Subscription } = {};
+
   /** Inner Observable currently assigned to a property via SET_OBSERVABLE */
   private inner$: { [P in keyof T]?: Observable<T[P]> } = {};
+
   innnerUpdate = false;
 
   constructor(target: T, private deep: boolean = false, private handler?: ProxyHandler<T>) {
@@ -112,6 +118,7 @@ class RxHandler<T extends object> implements ProxyHandler<T> {
       }
       // only convert to RxObject plain objects and arrays
       if (!isObservable(value) && (Array.isArray(value) || isPlainObject(value))) {
+        // eslint-disable-next-line no-multi-assign
         if (!isReactive(value)) target[property] = value = RxObject(value, true);
         this.subscriptions[property] = value[AS_OBSERVABLE]().subscribe((val: any) => {
           const sub = this.properties$[property];
@@ -196,7 +203,7 @@ class RxHandler<T extends object> implements ProxyHandler<T> {
   }
 
   arrayMutating(target: T & any[], method: MutatingMethod, ...args: any[]): any {
-    // tslint:disable-next-line: ban-types
+    // eslint-disable-next-line @typescript-eslint/ban-types
     const ret = (target[method] as Function).apply(target, args);
     this.main$.next(target);
     // emit new values for all subscribed
@@ -207,6 +214,7 @@ class RxHandler<T extends object> implements ProxyHandler<T> {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/ban-types
 export function RxObject<T extends object>(
   base: T,
   deep = false,

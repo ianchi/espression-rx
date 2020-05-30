@@ -1,5 +1,12 @@
+/**
+ * Copyright (c) 2020 Adrian Panella <ianchi74@outlook.com>
+ * This software is released under the MIT License.
+ * https://opensource.org/licenses/MIT
+ */
+
 import 'jasmine';
 import { isObservable } from 'rxjs';
+
 import { testScheduler } from '../helpers/espression';
 
 const evaluate: (expr: string, context: any) => any = (global as any).espression.evaluate;
@@ -172,15 +179,15 @@ describe('Basic Numeric operations on observables', () => {
   it('should shortcircuit evaluation of conditional expression, resuscribe on true ', () => {
     testScheduler().run(({ expectObservable, cold }) => {
       const object = '-0--0-5-5-----6--|';
-      const i_true = '1-2';
-      const i_flse = 'a-b';
+      const iTrue = '1-2';
+      const iFlse = 'a-b';
       const result = '-a-ba-1-1-2---1-2';
 
       const context = {
         a: 1,
         o: cold(object, values),
-        t: cold(i_true, values),
-        f: cold(i_flse, values),
+        t: cold(iTrue, values),
+        f: cold(iFlse, values),
       };
       const e1 = evaluate('o ? t : f', context);
 

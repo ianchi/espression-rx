@@ -1,8 +1,15 @@
-// eslint-disable-next-line @typescript-eslint/triple-slash-reference
+/**
+ * Copyright (c) 2020 Adrian Panella <ianchi74@outlook.com>
+ * This software is released under the MIT License.
+ * https://opensource.org/licenses/MIT
+ */
+
+// eslint-disable-next-line @typescript-eslint/triple-slash-reference, spaced-comment
 /// <reference path="../support/matchers_types.d.ts"/>
 
 import 'jasmine';
 import { isObservable, BehaviorSubject } from 'rxjs';
+
 import { testScheduler } from '../helpers/espression';
 import { toBeObservableMatcher } from '../helpers/observable';
 
@@ -97,9 +104,9 @@ describe('Observable Lvalues and any Rvalue', () => {
     testScheduler().run(() => {
       const expr = 'arr[o].a = 123';
 
-      const x = { a: 10 },
-        y = { a: 20 },
-        z = { a: 30 };
+      const x = { a: 10 };
+      const y = { a: 20 };
+      const z = { a: 30 };
       const context = {
         arr: [x, y, z],
         o: new BehaviorSubject(0),
