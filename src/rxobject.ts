@@ -6,7 +6,7 @@
  */
 
 import isPlainObject from 'is-plain-object';
-import { BehaviorSubject, isObservable, Observable, Subscription } from 'rxjs';
+import { BehaviorSubject, isObservable, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 export const AS_OBSERVABLE = Symbol('asObservable');
@@ -70,9 +70,6 @@ class RxHandler<T extends object> implements ProxyHandler<T> {
   /** Map of subjects for each property */
   private properties$: { [P in keyof T]?: BehaviorSubject<T[P]> } = {};
 
-  /**  */
-  private subscriptions: { [P in keyof T]?: Subscription } = {};
-
   /** Inner Observable currently assigned to a property via SET_OBSERVABLE */
   private inner$: { [P in keyof T]?: Observable<T[P]> } = {};
 
@@ -109,25 +106,16 @@ class RxHandler<T extends object> implements ProxyHandler<T> {
     // if something new is assigned, previous assigned inner observable
     if (property in this.inner$ && !this.innnerUpdate) delete this.inner$[property];
 
-    // also emit if nested object changes
+    // only convert to RxObject plain objects and arrays
+    if (
+      this.deep &&
+      !isObservable(value) &&
+      (Array.isArray(value) || isPlainObject(value)) &&
+      !isReactive(value)
+    )
+      // eslint-disable-next-line no-multi-assign
+      target[property] = value = RxObject(value, true);
 
-    if (this.deep) {
-      if (this.subscriptions[property]) {
-        this.subscriptions[property]!.unsubscribe();
-        delete this.subscriptions[property];
-      }
-      // only convert to RxObject plain objects and arrays
-      if (!isObservable(value) && (Array.isArray(value) || isPlainObject(value))) {
-        // eslint-disable-next-line no-multi-assign
-        if (!isReactive(value)) target[property] = value = RxObject(value, true);
-        this.subscriptions[property] = value[AS_OBSERVABLE]().subscribe((val: any) => {
-          const sub = this.properties$[property];
-          if (sub) sub.next(val);
-          this.main$.next(target);
-        });
-        return true;
-      }
-    }
     const sub = this.properties$[property];
     if (sub) sub.next(target[property]);
 
