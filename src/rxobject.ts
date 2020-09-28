@@ -5,7 +5,7 @@
  * https://opensource.org/licenses/MIT
  */
 
-import isPlainObject from 'is-plain-object';
+import { isPlainObject } from 'is-plain-object';
 import { BehaviorSubject, isObservable, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 

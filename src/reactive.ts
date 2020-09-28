@@ -42,10 +42,10 @@ export class ReactiveEval extends ES6StaticEval {
     return unresolved ? result : immediateResolve(result);
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   _assignPattern(
     node: INode,
     operator: string,
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     right: any,
     context: keyedObject,
     defaultsContext?: keyedObject
