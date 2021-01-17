@@ -6,7 +6,7 @@
   "license": "MIT",
   "repository": "https://github.com/ianchi/ESpression-rx.git",
   "main": "dist/bundle/espression-rx.cjs.js",
-  "module": "dist/esm5/espression-rx.js",
+  "module": "dist/esm2015/espression-rx.js",
   "es2015": "dist/esm2015/espression-rx.js",
   "types": "dist/src/main.d.ts",
   "private": false,

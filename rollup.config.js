@@ -16,11 +16,6 @@ export default [
         format: 'cjs',
         sourcemap: true,
       },
-      {
-        file: pkg.module,
-        format: 'es',
-        sourcemap: true,
-      },
     ],
     plugins: [nodeResolve(), typescript()],
   },
@@ -39,7 +34,7 @@ export default [
         useTsconfigDeclarationDir: true,
         tsconfigOverride: {
           compilerOptions: {
-            target: 'es2015',
+            target: 'es2017',
             declaration: true,
             declarationDir: path.dirname(pkg.types),
           },
