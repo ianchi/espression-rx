@@ -188,12 +188,11 @@ export class ReactiveEval extends ES6StaticEval {
     const es6Func = super.ArrowFunctionExpression(node, context);
 
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-    return (...params: any[]) => {
-      return immediateResolve(
+    return (...params: any[]) =>
+      immediateResolve(
         es6Func(...params),
         'Returning unresolved observable from arrow function expression'
       );
-    };
   }
 
   protected UpdateExpression(node: INode, context: keyedObject): any {
