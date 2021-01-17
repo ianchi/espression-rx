@@ -1,8 +1,15 @@
+/**
+ * Copyright (c) 2021 Adrian Panella <ianchi74@outlook.com>
+ * This software is released under the MIT License.
+ * https://opensource.org/licenses/MIT
+ */
+
+import path from 'path';
+
 import typescript from 'rollup-plugin-typescript2';
 import nodeResolve from '@rollup/plugin-node-resolve';
 
 import pkg from './package.json';
-import path from 'path';
 
 const MAIN_FILE = 'src/main.ts';
 
