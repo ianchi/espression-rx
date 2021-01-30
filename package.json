@@ -1,6 +1,6 @@
 {
   "name": "espression-rx",
-  "version": "0.3.13",
+  "version": "0.3.14",
   "description": "ESpression extension to perform reactive evaluation of expressions",
   "author": "Adrian Panella <ianchi74@outlook.com>",
   "license": "MIT",
@@ -10,6 +10,9 @@
   "es2015": "dist/esm2015/espression-rx.js",
   "types": "dist/src/main.d.ts",
   "private": false,
+  "dependencies": {
+    "is-plain-object": "^5.0.0"
+  },
   "peerDependencies": {
     "tslib": "^2.0.0",
     "rxjs": "^6.5.4",
@@ -60,8 +63,5 @@
     "eval",
     "rx",
     "espression"
-  ],
-  "dependencies": {
-    "is-plain-object": "^5.0.0"
-  }
+  ]
 }
